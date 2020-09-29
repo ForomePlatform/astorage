@@ -24,6 +24,7 @@ import org.forome.astorage.core.batch.BatchRecord;
 import org.forome.astorage.core.exception.ExceptionBuilder;
 import org.forome.astorage.core.packer.PackInterval;
 import org.forome.astorage.core.record.Record;
+import org.forome.astorage.core.rocksdb.RocksDBDatabase;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Interval;
 import org.forome.core.struct.Position;
@@ -33,7 +34,7 @@ import org.rocksdb.RocksDBException;
 
 import java.nio.file.Path;
 
-public class SourceDatabase extends RocksDBDatabase implements Source {
+public class SourceDatabase implements Source {
 
 	public static final short VERSION_FORMAT = 1;
 
@@ -44,32 +45,35 @@ public class SourceDatabase extends RocksDBDatabase implements Source {
 
 	private final Metadata metadata;
 
-	public SourceDatabase(Assembly assembly, Path pathDatabase) throws DatabaseException {
-		super(pathDatabase);
-		this.assembly = assembly;
+	private final RocksDBDatabase rocksDBDatabase;
 
-		ColumnFamilyHandle columnFamilyInfo = getColumnFamily(COLUMN_FAMILY_INFO);
+	public SourceDatabase(Assembly assembly, Path pathDatabase) throws DatabaseException {
+		this.assembly = assembly;
+		this.rocksDBDatabase = new RocksDBDatabase(pathDatabase);
+
+		ColumnFamilyHandle columnFamilyInfo = rocksDBDatabase.getColumnFamily(COLUMN_FAMILY_INFO);
 		if (columnFamilyInfo == null) {
 			throw ExceptionBuilder.buildDatabaseException("ColumnFamily not found");
 		}
-		this.metadata = new Metadata(rocksDB, columnFamilyInfo);
+		this.metadata = new Metadata(rocksDBDatabase.rocksDB, columnFamilyInfo);
 		if (metadata.getFormatVersion() != VERSION_FORMAT) {
 			throw new RuntimeException("Format version RocksDB is not correct: " + metadata.getFormatVersion());
 		}
 		if (metadata.getAssembly() != assembly) {
-//TODO Ulitin V. Необходимо вернуть валидацию
-//			throw new RuntimeException("Not equals assembly: " + metadata.getAssembly());
+			throw new RuntimeException("Not equals assembly: " + metadata.getAssembly());
 		}
 	}
 
+	@Override
 	public Metadata getMetadata() {
 		return metadata;
 	}
 
+	@Override
 	public Record getRecord(Position position) {
 		BatchRecord batchRecord = getBatchRecord(
-				rocksDB,
-				getColumnFamily(COLUMN_FAMILY_RECORD),
+				rocksDBDatabase.rocksDB,
+				rocksDBDatabase.getColumnFamily(COLUMN_FAMILY_RECORD),
 				position
 		);
 		if (batchRecord != null) {

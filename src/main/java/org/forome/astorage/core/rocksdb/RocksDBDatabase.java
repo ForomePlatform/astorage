@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-package org.forome.astorage.core.source;
+package org.forome.astorage.core.rocksdb;
 
 import com.infomaximum.database.exception.DatabaseException;
 import com.infomaximum.database.utils.TypeConvert;
@@ -40,7 +40,7 @@ public class RocksDBDatabase {
 
 	public final Path pathDatabase;
 
-	protected final RocksDB rocksDB;
+	public final RocksDB rocksDB;
 	private final Map<String, ColumnFamilyHandle> columnFamilies;
 
 	public RocksDBDatabase(Path pathDatabase) throws DatabaseException {
@@ -66,7 +66,7 @@ public class RocksDBDatabase {
 		log.debug("Load database: {}... complete", pathDatabase.toString());
 	}
 
-	protected ColumnFamilyHandle getColumnFamily(String name) {
+	public ColumnFamilyHandle getColumnFamily(String name) {
 		return columnFamilies.get(name);
 	}
 

@@ -7,7 +7,7 @@ if (file('publish.gradle').exists()) {
 }
 
 group 'org.forome.astorage'
-version '1.0.0RC1'
+version '1.0.0RC2'
 
 sourceCompatibility = 1.8
 
@@ -68,5 +68,20 @@ dependencies {
     compile 'ch.qos.logback:logback-core:1.2.2'
     compile'ch.qos.logback:logback-classic:1.2.3'
 
+    serviceCompile 'net.minidev:json-smart:2.3'
+
+    serviceCompile 'org.eclipse.jetty:jetty-server:9.4.11.v20180605'
+    serviceCompile 'org.eclipse.jetty:jetty-servlet:9.4.11.v20180605'
+    serviceCompile 'org.eclipse.jetty:jetty-webapp:9.4.11.v20180605'
+
+    serviceCompile 'org.springframework:spring-core:4.3.9.RELEASE'
+    serviceCompile 'org.springframework:spring-web:4.3.9.RELEASE'
+    serviceCompile 'org.springframework:spring-webmvc:4.3.9.RELEASE'
+    serviceCompile 'org.springframework:spring-context-support:4.3.9.RELEASE'
+    serviceCompile 'org.springframework:spring-messaging:4.3.9.RELEASE'
+    serviceCompile 'javax.servlet:jstl:1.2'
+
+    serviceCompile "io.github.graphql-java:graphql-java-annotations:7.2.1"
+    
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
