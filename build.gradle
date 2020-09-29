@@ -16,6 +16,15 @@ repositories {
     maven { url "https://maven.corp.mobin.me/content/repositories/releases/" }
 }
 
+configurations {
+    make_databaseCompile.extendsFrom compile
+    make_databaseRuntime.extendsFrom runtime
+
+    serviceCompile.extendsFrom compile
+    serviceRuntime.extendsFrom runtime
+}
+
+
 sourceSets {
     main {
         java.srcDir 'src/main/java'
@@ -43,45 +52,10 @@ sourceSets {
     }
 }
 
-configurations {
-    make_databaseCompile.extendsFrom compile
-    make_databaseRuntime.extendsFrom runtime
-
-    serviceCompile.extendsFrom compile
-    serviceRuntime.extendsFrom runtime
-}
-
-jar {
-    archiveName = project.hasProperty('filename') ? filename : (rootProject.name + '.jar')
-
-    if (project.hasProperty('with_win_installer')) {
-        from files(sourceSets.win_installer.output)
-        from {
-            configurations.win_installerCompile.collect {
-                it.isDirectory() ? it : zipTree(it)
-            }
-            configurations.win_installerRuntime.collect {
-                it.isDirectory() ? it : zipTree(it)
-            }
-        }
-    } else {
-        from {
-            if (project.hasProperty('onejar')) {//Если необходим единый архив со всеми зависимоятями
-                configurations.compile.collect {
-                    it.isDirectory() ? it : zipTree(it)
-                }
-                configurations.runtime.collect {
-                    it.isDirectory() ? it : zipTree(it)
-                }
-            }
-        }
-    }
-}
-
 dependencies {
 
     compile 'com.github.samtools:htsjdk:2.19.0'
-    
+
     compile 'com.google.guava:guava:23.0'
     compile 'commons-cli:commons-cli:1.4'
     compile 'com.infomaximum:rdao:1.9.1'
@@ -89,11 +63,10 @@ dependencies {
     compile 'org.apache.commons:commons-compress:1.20'
 
     compile 'org.rocksdb:rocksdbjni:6.6.4'
-    
-    compile 'org.slf4j:slf4j-api:1.7.25'
 
-    make_databaseСompile 'ch.qos.logback:logback-core:1.2.2'
-    make_databaseСompile 'ch.qos.logback:logback-classic:1.2.3'
-    
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile 'ch.qos.logback:logback-core:1.2.2'
+    compile'ch.qos.logback:logback-classic:1.2.3'
+
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
