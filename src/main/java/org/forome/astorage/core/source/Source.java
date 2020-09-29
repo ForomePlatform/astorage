@@ -18,10 +18,13 @@
 
 package org.forome.astorage.core.source;
 
+import org.forome.astorage.core.Metadata;
 import org.forome.astorage.core.record.Record;
 import org.forome.core.struct.Position;
 
 public interface Source {
 
-	public Record getRecord(Position position);
+	Metadata getMetadata();
+
+	Record getRecord(Position position);
 }

@@ -30,7 +30,7 @@ public class AStorageException extends RuntimeException {
 	private final Map<String, Object> parameters;
 	private final String comment;
 
-	AStorageException(String code, String comment, Map<String, Object> parameters, Throwable cause) {
+	protected AStorageException(String code, String comment, Map<String, Object> parameters, Throwable cause) {
 		super(
 				buildMessage(code, parameters, comment),
 				cause
