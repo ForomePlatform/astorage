@@ -21,6 +21,11 @@ package org.forome.astorage.service.graphql.utils;
 public class ConvertType {
 
     public static Double toDouble(Float value) {
-        return (value == null) ? null : value.doubleValue();
+        if (value == null) {
+            return null;
+        } else {
+            //Тихий ужас, но не нашел быстрого способа сконвертировать типы без изменения точности
+            return Double.parseDouble(value.toString());
+        }
     }
 }
