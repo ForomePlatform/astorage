@@ -20,27 +20,34 @@ package org.forome.astorage.service.main;
 
 import org.apache.commons.cli.*;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class ArgumentParser {
 
-	private static final String OPTION_PORT = "port";
+	private static final String OPTION_PATH_CONFIG = "config";
 
-	private static final int DEFAULT_PORT = 8095;
-
-	public final int port;
+	public final Path configFile;
 
 	public ArgumentParser(String[] args) throws InterruptedException {
 		Options options = new Options()
 				.addOption(Option.builder()
-						.longOpt(OPTION_PORT)
+						.longOpt(OPTION_PATH_CONFIG)
 						.hasArg(true)
 						.optionalArg(true)
-						.desc("Absolute path to data directory")
+						.desc("Absolute path to config file")
 						.build());
 
 		try {
 			CommandLine cmd = new DefaultParser().parse(options, args);
 
-			port = Integer.parseInt(cmd.getOptionValue(OPTION_PORT, String.valueOf(DEFAULT_PORT)));
+			String sConfigFile = cmd.getOptionValue(OPTION_PATH_CONFIG, "config.json");
+			configFile = Paths.get(sConfigFile).toAbsolutePath();
+			if (!Files.exists(configFile)) {
+				throw new RuntimeException("File: " + configFile.toString() + " not found");
+			}
+
 		} catch (ParseException | IllegalArgumentException ex) {
 			System.out.println(ex.getMessage());
 			new HelpFormatter().printHelp("", options);

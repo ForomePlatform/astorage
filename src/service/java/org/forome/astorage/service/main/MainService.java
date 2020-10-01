@@ -22,7 +22,7 @@ public class MainService {
 
 		try {
 			Service service = new Service(
-					arguments.port,
+					arguments.configFile,
 					(thread, throwable) -> crash(throwable)
 			);
 

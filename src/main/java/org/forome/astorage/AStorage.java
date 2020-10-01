@@ -11,39 +11,50 @@ import java.util.Map;
 
 public class AStorage {
 
-	public final Source sourceDatabase37;
-	public final Source sourceDatabase38;
+    public final Source sourceDatabase37;
+    public final Source sourceDatabase38;
 
-	private AStorage(Builder builder) throws DatabaseException {
-		Map<Assembly, Path> sources = builder.sources;
-		if (sources.containsKey(Assembly.GRCh37)) {
-			sourceDatabase37 = new SourceDatabase(Assembly.GRCh37, sources.get(Assembly.GRCh37));
-		} else {
-			sourceDatabase37 = null;
-		}
-		if (sources.containsKey(Assembly.GRCh38)) {
-			sourceDatabase38 = new SourceDatabase(Assembly.GRCh38, sources.get(Assembly.GRCh38));
-		} else {
-			sourceDatabase38 = null;
-		}
-	}
+    private AStorage(Builder builder) throws DatabaseException {
+        Map<Assembly, Path> sources = builder.sources;
+        if (sources.containsKey(Assembly.GRCh37)) {
+            sourceDatabase37 = new SourceDatabase(Assembly.GRCh37, sources.get(Assembly.GRCh37));
+        } else {
+            sourceDatabase37 = null;
+        }
+        if (sources.containsKey(Assembly.GRCh38)) {
+            sourceDatabase38 = new SourceDatabase(Assembly.GRCh38, sources.get(Assembly.GRCh38));
+        } else {
+            sourceDatabase38 = null;
+        }
+    }
+
+    public Source getSource(Assembly assembly) {
+        switch (assembly) {
+            case GRCh37:
+                return sourceDatabase37;
+            case GRCh38:
+                return sourceDatabase38;
+            default:
+                throw new RuntimeException("Not support assemple: " + assembly);
+        }
+    }
 
 
-	public static class Builder {
+    public static class Builder {
 
-		private Map<Assembly, Path> sources;
+        private Map<Assembly, Path> sources;
 
-		public Builder() {
-			sources = new HashMap<>();
-		}
+        public Builder() {
+            sources = new HashMap<>();
+        }
 
-		public Builder withSource(Assembly assembly, Path path) {
-			sources.put(assembly, path);
-			return this;
-		}
+        public Builder withSource(Assembly assembly, Path path) {
+            sources.put(assembly, path);
+            return this;
+        }
 
-		public AStorage build() throws DatabaseException {
-			return new AStorage(this);
-		}
-	}
+        public AStorage build() throws DatabaseException {
+            return new AStorage(this);
+        }
+    }
 }

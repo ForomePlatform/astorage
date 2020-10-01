@@ -60,7 +60,7 @@ public class SourceDatabase implements Source {
 			throw new RuntimeException("Format version RocksDB is not correct: " + metadata.getFormatVersion());
 		}
 		if (metadata.getAssembly() != assembly) {
-			throw new RuntimeException("Not equals assembly: " + metadata.getAssembly());
+//			throw new RuntimeException("Not equals assembly: " + metadata.getAssembly());
 		}
 	}
 
