@@ -20,10 +20,15 @@ package org.forome.astorage.service.graphql.query.source.dataposition;
 
 import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
+import org.forome.astorage.AStorage;
 import org.forome.astorage.core.data.Conservation;
+import org.forome.astorage.core.record.Record;
+import org.forome.astorage.core.source.Source;
+import org.forome.astorage.service.Service;
 import org.forome.astorage.service.graphql.query.source.dataposition.conservation.GConservation;
 import org.forome.astorage.service.graphql.scalar.GAssembly;
 import org.forome.astorage.service.graphql.scalar.GChromosome;
+import org.forome.astorage.service.graphql.scalar.GNucleotide;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Position;
 
@@ -62,4 +67,12 @@ public class GDataPosition {
         return new GConservation(this);
     }
 
+    @GraphQLField
+    @GraphQLName("nucleotide")
+    public GNucleotide getNucleotide() {
+        AStorage aStorage = Service.getInstance().getAStorageService().aStorage;
+        Source source = aStorage.getSource(assembly);
+        Record record = source.getRecord(position);
+        return GNucleotide.convert(record.getNucleotide());
+    }
 }

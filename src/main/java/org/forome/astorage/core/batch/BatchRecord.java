@@ -30,6 +30,7 @@ public class BatchRecord {
 	protected final byte[] bytes;
 
 	public final BatchRecordConservation batchRecordConservation;
+	public final BatchRecordFasta batchRecordFasta;
 
 	public BatchRecord(Interval interval, byte[] bytes) {
 		this.interval = interval;
@@ -39,6 +40,8 @@ public class BatchRecord {
 		this.batchRecordConservation = new BatchRecordConservation(interval, bytes, offset);
 		offset += batchRecordConservation.getLengthBytes();
 
+		this.batchRecordFasta = new BatchRecordFasta(interval, bytes, offset);
+		offset += batchRecordFasta.getLengthBytes();
 	}
 
 	public Record getRecord(Position position) {

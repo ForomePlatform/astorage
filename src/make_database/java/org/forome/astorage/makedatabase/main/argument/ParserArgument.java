@@ -31,6 +31,10 @@ public class ParserArgument {
 
 	public static final String OPTION_SOURCE_GERP_HG19 = "gerp19";
 
+	public static final String OPTION_SOURCE_FASTA_HG19 = "fasta19";
+
+	public static final String OPTION_SOURCE_FASTA_HG38 = "fasta38";
+
 	public final Arguments arguments;
 
 	public ParserArgument(String[] args) throws InterruptedException {
@@ -55,6 +59,20 @@ public class ParserArgument {
 						.hasArg(true)
 						.optionalArg(true)
 						.desc("Absolute path to data file: gerp hg19")
+						.build())
+
+				.addOption(Option.builder()
+						.longOpt(OPTION_SOURCE_FASTA_HG19)
+						.hasArg(true)
+						.optionalArg(true)
+						.desc("Absolute path to data file: fasta hg19")
+						.build())
+
+				.addOption(Option.builder()
+						.longOpt(OPTION_SOURCE_FASTA_HG38)
+						.hasArg(true)
+						.optionalArg(true)
+						.desc("Absolute path to data file: fasta hg38")
 						.build())
 
 				;

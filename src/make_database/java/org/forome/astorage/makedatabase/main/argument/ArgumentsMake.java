@@ -34,6 +34,10 @@ public class ArgumentsMake extends Arguments {
 
 	public final Path gerpHg19;
 
+	public final Path fastaHg19;
+
+	public final Path fastaHg38;
+
 	public ArgumentsMake(CommandLine cmd) {
 		super(cmd);
 
@@ -43,7 +47,7 @@ public class ArgumentsMake extends Arguments {
 		}
 		database = Paths.get(strPathDatabase).toAbsolutePath();
 		if (Files.exists(database) && !Files.isDirectory(database)) {
-			throw new IllegalArgumentException("path database is file: " + database);
+			throw new IllegalArgumentException("path database does file: " + database);
 		}
 
 		String strAssembly = cmd.getOptionValue(ParserArgument.OPTION_ASSEMBLY);
@@ -54,12 +58,34 @@ public class ArgumentsMake extends Arguments {
 
 
 		String strSourceGerpHg19 = cmd.getOptionValue(ParserArgument.OPTION_SOURCE_GERP_HG19);
-		if (Strings.isNullOrEmpty(strSourceGerpHg19)) {
-			throw new IllegalArgumentException("Missing Gerp(hg19) file");
+		if (!Strings.isNullOrEmpty(strSourceGerpHg19)) {
+			gerpHg19 = Paths.get(strSourceGerpHg19).toAbsolutePath();
+			if (!Files.exists(gerpHg19)) {
+				throw new IllegalArgumentException("Gerp(hg19) file does not exists: " + gerpHg19);
+			}
+		} else {
+			gerpHg19 = null;
 		}
-		gerpHg19 = Paths.get(strSourceGerpHg19).toAbsolutePath();
-		if (!Files.exists(gerpHg19)) {
-			throw new IllegalArgumentException("Gerp(hg19) file is not exists: " + gerpHg19);
+
+		String strSourceFastaHg19 = cmd.getOptionValue(ParserArgument.OPTION_SOURCE_FASTA_HG19);
+		if (!Strings.isNullOrEmpty(strSourceFastaHg19)) {
+			fastaHg19 = Paths.get(strSourceFastaHg19).toAbsolutePath();
+			if (!Files.exists(fastaHg19)) {
+				throw new IllegalArgumentException("Fasta (hg19) file does not exists: " + fastaHg19);
+			}
+		} else {
+			fastaHg19 = null;
 		}
+
+		String strSourceFastaHg38 = cmd.getOptionValue(ParserArgument.OPTION_SOURCE_FASTA_HG38);
+		if (!Strings.isNullOrEmpty(strSourceFastaHg38)) {
+			fastaHg38 = Paths.get(strSourceFastaHg38).toAbsolutePath();
+			if (!Files.exists(fastaHg38)) {
+				throw new IllegalArgumentException("Fasta (hg38) file does not exists: " + fastaHg38);
+			}
+		} else {
+			fastaHg38 = null;
+		}
+
 	}
 }

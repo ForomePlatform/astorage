@@ -21,5 +21,5 @@ package org.forome.astorage.core.compression.exception;
 /**
  * Тип ошибки указывающий, что алгоритм сжатия не поодерживает эти данные
  */
-public class NotSupportCompression extends Exception {
+public class NotSupportCompression extends RuntimeException {
 }

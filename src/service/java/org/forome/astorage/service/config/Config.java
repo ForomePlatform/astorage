@@ -59,7 +59,7 @@ public class Config {
 		if (jDatabase.containsKey("hg37")) {
 			databaseHg37 = Paths.get(jDatabase.getAsString("hg37")).toAbsolutePath();
 			if (!Files.exists(databaseHg37) || !Files.isDirectory(databaseHg37)) {
-				throw new RuntimeException("Database is not exists: " + databaseHg37);
+				throw new RuntimeException("Database does not exists: " + databaseHg37);
 			}
 		} else {
 			databaseHg37 = null;
@@ -67,7 +67,7 @@ public class Config {
 		if (jDatabase.containsKey("hg38")) {
 			databaseHg38 = Paths.get(jDatabase.getAsString("hg38")).toAbsolutePath();
 			if (!Files.exists(databaseHg38) || !Files.isDirectory(databaseHg38)) {
-				throw new RuntimeException("Database is not exists: " + databaseHg38);
+				throw new RuntimeException("Database does not exists: " + databaseHg38);
 			}
 		} else {
 			databaseHg38 = null;

@@ -21,6 +21,7 @@ package org.forome.astorage.core.record;
 import org.forome.astorage.core.batch.BatchRecord;
 import org.forome.astorage.core.data.Conservation;
 import org.forome.core.struct.Position;
+import org.forome.core.struct.nucleotide.Nucleotide;
 
 public class Record {
 
@@ -35,5 +36,10 @@ public class Record {
 	public Conservation getConservation() {
 		RecordConservation recordConservation = new RecordConservation(this, batchRecord.batchRecordConservation);
 		return recordConservation.getConservation();
+	}
+
+	public Nucleotide getNucleotide(){
+		RecordFasta recordFasta = new RecordFasta(this, batchRecord.batchRecordFasta);
+		return recordFasta.getNucleotide();
 	}
 }

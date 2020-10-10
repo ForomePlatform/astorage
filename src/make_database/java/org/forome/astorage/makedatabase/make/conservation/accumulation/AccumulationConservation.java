@@ -35,11 +35,10 @@ public class AccumulationConservation extends Accumulation {
 		super(rocksDB, columnFamilyRecord, statistics);
 	}
 
-	public void add(Chromosome chromosome, int pos, Conservation conservation) throws RocksDBException {
+	public void add(Position position, Conservation conservation) throws RocksDBException {
 		if (WriteBatchRecordConservation.isEmpty(conservation)) {
 			return;
 		}
-		Position position = new Position(chromosome, pos);
 
 		WriteBatchRecord writeBatchRecord = getBatchRecord(position);
 		WriteBatchRecordConservation writeBatchRecordConservation = writeBatchRecord.getBatchRecordConservation();

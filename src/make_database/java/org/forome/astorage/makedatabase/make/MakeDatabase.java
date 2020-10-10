@@ -25,6 +25,7 @@ import org.forome.astorage.core.utils.bits.ShortBits;
 import org.forome.astorage.core.utils.bits.StringBits;
 import org.forome.astorage.makedatabase.main.argument.ArgumentsMake;
 import org.forome.astorage.makedatabase.make.conservation.MakeConservation;
+import org.forome.astorage.makedatabase.make.fasta.MakeFasta;
 import org.forome.astorage.makedatabase.statistics.StatisticsCompression;
 import org.forome.core.struct.Assembly;
 import org.rocksdb.*;
@@ -37,26 +38,39 @@ import java.sql.SQLException;
 
 public class MakeDatabase implements AutoCloseable {
 
-	private final static Logger log = LoggerFactory.getLogger(MakeDatabase.class);
+    private final static Logger log = LoggerFactory.getLogger(MakeDatabase.class);
 
-	public final Assembly assembly;
+    public final Assembly assembly;
 
-	private final RocksDBConnector rocksDBConnector;
-	private final OptimisticTransactionDB rocksDB;
+    private final RocksDBConnector rocksDBConnector;
+    private final OptimisticTransactionDB rocksDB;
 
-	public final LiftoverConnector liftoverConnector;
+    public final LiftoverConnector liftoverConnector;
 
-	public final MakeConservation makeConservation;
+    public final MakeConservation makeConservation;
+    public final MakeFasta makeFasta;
 
-	public MakeDatabase(ArgumentsMake argumentsMake) throws Exception {
-		this.assembly = argumentsMake.assembly;
+    public MakeDatabase(ArgumentsMake argumentsMake) throws Exception {
+        this.assembly = argumentsMake.assembly;
 
-		this.rocksDBConnector = new RocksDBConnector(argumentsMake.database.toAbsolutePath());
-		this.rocksDB = rocksDBConnector.rocksDB;
+        this.rocksDBConnector = new RocksDBConnector(argumentsMake.database.toAbsolutePath());
+        this.rocksDB = rocksDBConnector.rocksDB;
 
-		this.liftoverConnector = new LiftoverConnector();
+        this.liftoverConnector = new LiftoverConnector();
 
-		this.makeConservation = new MakeConservation(this, assembly, Assembly.GRCh37, argumentsMake.gerpHg19);
+        if (argumentsMake.gerpHg19 != null) {
+            this.makeConservation = new MakeConservation(this, assembly, Assembly.GRCh37, argumentsMake.gerpHg19);
+        } else {
+            this.makeConservation = null;
+        }
+
+        if (assembly == Assembly.GRCh37 && argumentsMake.fastaHg19 != null) {
+            this.makeFasta = new MakeFasta(this, assembly, argumentsMake.fastaHg19);
+        } else if (assembly == Assembly.GRCh38 && argumentsMake.fastaHg38 != null) {
+            this.makeFasta = new MakeFasta(this, assembly, argumentsMake.fastaHg38);
+        } else {
+            this.makeFasta = null;
+        }
 
 		/*
 		ColumnFamilyHandle columnFamilyRecord = rocksDBConnector.getColumnFamily(RocksDBDatabase.COLUMN_FAMILY_RECORD);
@@ -76,53 +90,59 @@ public class MakeDatabase implements AutoCloseable {
 		}
 		log.debug("read complete");
 		*/
-	}
+    }
 
-	public void buildInfo() throws RocksDBException {
-		if (rocksDBConnector.getColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO) != null) {
-			rocksDBConnector.dropColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO);
-		}
-		ColumnFamilyHandle columnFamilyInfo = rocksDBConnector.createColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO);
+    public void buildInfo() throws RocksDBException {
+        if (rocksDBConnector.getColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO) != null) {
+            rocksDBConnector.dropColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO);
+        }
+        ColumnFamilyHandle columnFamilyInfo = rocksDBConnector.createColumnFamily(SourceDatabase.COLUMN_FAMILY_INFO);
 
-		try (Transaction transaction = rocksDB.beginTransaction(new WriteOptions())) {
+        try (Transaction transaction = rocksDB.beginTransaction(new WriteOptions())) {
 
-			//Версия формата
-			transaction.put(
-					columnFamilyInfo,
-					StringBits.toByteArray(Metadata.KEY_FORMAT_VERSION),
-					ShortBits.toByteArray(SourceDatabase.VERSION_FORMAT)
-			);
+            //Версия формата
+            transaction.put(
+                    columnFamilyInfo,
+                    StringBits.toByteArray(Metadata.KEY_FORMAT_VERSION),
+                    ShortBits.toByteArray(SourceDatabase.VERSION_FORMAT)
+            );
 
-			//Assembly
-			transaction.put(
-					columnFamilyInfo,
-					StringBits.toByteArray(Metadata.KEY_ASSEMBLY),
-					StringBits.toByteArray(assembly.name())
-			);
+            //Assembly
+            transaction.put(
+                    columnFamilyInfo,
+                    StringBits.toByteArray(Metadata.KEY_ASSEMBLY),
+                    StringBits.toByteArray(assembly.name())
+            );
 
-			transaction.commit();
-		}
+            transaction.commit();
+        }
 
-		rocksDBConnector.rocksDB.compactRange(columnFamilyInfo);
-	}
+        rocksDBConnector.rocksDB.compactRange(columnFamilyInfo);
+    }
 
-	public void buildRecords() throws RocksDBException, SQLException, IOException {
-		ColumnFamilyHandle columnFamilyRecord = rocksDBConnector.getColumnFamily(SourceDatabase.COLUMN_FAMILY_RECORD);
-		if (columnFamilyRecord == null) {
-			columnFamilyRecord = rocksDBConnector.createColumnFamily(SourceDatabase.COLUMN_FAMILY_RECORD);
-		}
+    public void buildRecords() throws RocksDBException, SQLException, IOException {
+        ColumnFamilyHandle columnFamilyRecord = rocksDBConnector.getColumnFamily(SourceDatabase.COLUMN_FAMILY_RECORD);
+        if (columnFamilyRecord == null) {
+            columnFamilyRecord = rocksDBConnector.createColumnFamily(SourceDatabase.COLUMN_FAMILY_RECORD);
+        }
 
-		StatisticsCompression statistics = new StatisticsCompression();
+        StatisticsCompression statistics = new StatisticsCompression();
 
-		makeConservation.build(rocksDB, columnFamilyRecord, statistics);
-		rocksDBConnector.rocksDB.compactRange();
+        if (makeConservation != null) {
+            makeConservation.build(rocksDB, columnFamilyRecord, statistics);
+        }
+        if (makeFasta != null) {
+            makeFasta.build(rocksDB, columnFamilyRecord, statistics);
+        }
 
-		statistics.println();
-	}
+        rocksDBConnector.rocksDB.compactRange();
 
-	@Override
-	public void close() {
-		rocksDBConnector.close();
-	}
+        statistics.println();
+    }
+
+    @Override
+    public void close() {
+        rocksDBConnector.close();
+    }
 
 }

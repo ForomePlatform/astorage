@@ -28,14 +28,29 @@ public enum TypeCompression {
 	//Простое последовательное укладывание значений
 	ORDERS((byte) 1, new CompressionOrder()),
 
+	//Простое последовательное укладывание значений
+	ORDERS_OVER_GZIP((byte) 2, new CompressionOrder(true)),
+
 	//Простое последовательное укладывание значений со словарем
-	ORDERS_WITH_DICTIONARY((byte) 2, new CompressionOrderWithDictionary()),
+	ORDERS_WITH_DICTIONARY((byte) 3, new CompressionOrderWithDictionary()),
+
+	//Простое последовательное укладывание значений со словарем
+	ORDERS_WITH_DICTIONARY_OVER_GZIP((byte) 4, new CompressionOrderWithDictionary(true)),
 
 	//Укладка не пустых записей(значение с индексом)
-	SELECTIVE((byte) 3, new CompressionSelective()),
+	SELECTIVE((byte) 5, new CompressionSelective()),
+
+	//Укладка не пустых записей(значение с индексом)
+	SELECTIVE_OVER_GZIP((byte) 6, new CompressionSelective(true)),
 
 	//Укладка не пустых записей(значение с индексом) со словарем
-	SELECTIVE_WITH_DICTIONARY((byte) 4, new CompressionSelectiveWithDictionary());
+	SELECTIVE_WITH_DICTIONARY((byte) 7, new CompressionSelectiveWithDictionary()),
+
+	//Укладка не пустых записей(значение с индексом) со словарем
+	SELECTIVE_WITH_DICTIONARY_OVER_GZIP((byte) 8, new CompressionSelectiveWithDictionary(true)),
+
+	//Дефолтная укладка нуклиотидной последовательности, в одном байте - 2 нуклиотида
+	FASTA_DEFAULT((byte) 9, new CompressionFastaDefault());
 
 	public final byte value;
 	public final AbstractCompression compression;

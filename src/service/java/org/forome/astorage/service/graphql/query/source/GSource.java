@@ -22,10 +22,12 @@ import graphql.annotations.annotationTypes.GraphQLField;
 import graphql.annotations.annotationTypes.GraphQLName;
 import graphql.annotations.annotationTypes.GraphQLNonNull;
 import org.forome.astorage.service.graphql.query.source.dataposition.GDataPosition;
+import org.forome.astorage.service.graphql.query.source.dataposition.GGroupDataPosition;
 import org.forome.astorage.service.graphql.scalar.GAssembly;
 import org.forome.astorage.service.graphql.scalar.GChromosome;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Chromosome;
+import org.forome.core.struct.Interval;
 import org.forome.core.struct.Position;
 
 @GraphQLName("source")
@@ -48,6 +50,22 @@ public class GSource {
         return new GDataPosition(
                 assembly,
                 new Position(gChromosome.convert(), position)
+        );
+    }
+
+    @GraphQLField
+    @GraphQLName("data_by_positions")
+    public GGroupDataPosition getDataByPosition(
+            @GraphQLNonNull
+            @GraphQLName("chromosome") GChromosome gChromosome,
+            @GraphQLNonNull
+            @GraphQLName("start") int start,
+            @GraphQLNonNull
+            @GraphQLName("end") int end
+    ) {
+        return new GGroupDataPosition(
+                assembly,
+                Interval.of(gChromosome.convert(), start, end)
         );
     }
 }

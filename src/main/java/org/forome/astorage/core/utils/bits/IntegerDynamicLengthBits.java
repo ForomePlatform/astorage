@@ -26,11 +26,11 @@ public class IntegerDynamicLengthBits {
 	public static class Value {
 
 		public final int value;
-		public final int length;
+		public final int byteSize;
 
-		public Value(int value, int length) {
+		public Value(int value, int byteSize) {
 			this.value = value;
-			this.length = length;
+			this.byteSize = byteSize;
 		}
 	}
 
@@ -61,19 +61,19 @@ public class IntegerDynamicLengthBits {
 		int index = offset;
 
 		int value = 0;
-		int length = 0;
+		int byteSize = 0;
 
 		while (true) {
 			byte b = bytes[index++];
-			length++;
+			byteSize++;
 			if (b >= 0) {
 				value += b;
 				break;
 			} else {
-				value += -(b + 1) * (Math.pow(Byte.MAX_VALUE + 1, length));
+				value += -(b + 1) * (Math.pow(Byte.MAX_VALUE + 1, byteSize));
 			}
 		}
 
-		return new Value(value, length);
+		return new Value(value, byteSize);
 	}
 }

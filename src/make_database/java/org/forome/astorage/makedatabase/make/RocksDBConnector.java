@@ -35,81 +35,82 @@ import java.util.concurrent.ConcurrentMap;
 
 public class RocksDBConnector implements AutoCloseable {
 
-	public final Path pathRocksDB;
+    public final Path pathRocksDB;
 
-	public final OptimisticTransactionDB rocksDB;
-	private final ConcurrentMap<String, ColumnFamilyHandle> columnFamilies;
+    public final OptimisticTransactionDB rocksDB;
+    private final ConcurrentMap<String, ColumnFamilyHandle> columnFamilies;
 
-	public RocksDBConnector(Path pathRocksDB) throws Exception {
-		this.pathRocksDB = pathRocksDB;
+    public RocksDBConnector(Path pathRocksDB) throws Exception {
+        this.pathRocksDB = pathRocksDB;
 
-		try (DBOptions options = buildOptions()) {
-			List<ColumnFamilyDescriptor> columnFamilyDescriptors = getColumnFamilyDescriptors();
+        try (DBOptions options = buildOptions()) {
+            List<ColumnFamilyDescriptor> columnFamilyDescriptors = getColumnFamilyDescriptors();
 
-			List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
-			rocksDB = OptimisticTransactionDB.open(options, pathRocksDB.toString(), columnFamilyDescriptors, columnFamilyHandles);
+            List<ColumnFamilyHandle> columnFamilyHandles = new ArrayList<>();
+            rocksDB = OptimisticTransactionDB.open(options, pathRocksDB.toString(), columnFamilyDescriptors, columnFamilyHandles);
 
-			columnFamilies = new ConcurrentHashMap<>();
-			for (int i = 0; i < columnFamilyDescriptors.size(); i++) {
-				String columnFamilyName = TypeConvert.unpackString(columnFamilyDescriptors.get(i).getName());
-				ColumnFamilyHandle columnFamilyHandle = columnFamilyHandles.get(i);
-				columnFamilies.put(columnFamilyName, columnFamilyHandle);
-			}
-		} catch (RocksDBException e) {
-			throw new DatabaseException(e);
-		}
-	}
+            columnFamilies = new ConcurrentHashMap<>();
+            for (int i = 0; i < columnFamilyDescriptors.size(); i++) {
+                String columnFamilyName = TypeConvert.unpackString(columnFamilyDescriptors.get(i).getName());
+                ColumnFamilyHandle columnFamilyHandle = columnFamilyHandles.get(i);
+                columnFamilies.put(columnFamilyName, columnFamilyHandle);
+            }
+        } catch (RocksDBException e) {
+            throw new DatabaseException(e);
+        }
+    }
 
-	public ColumnFamilyHandle getColumnFamily(String name) {
-		return columnFamilies.get(name);
-	}
+    public ColumnFamilyHandle getColumnFamily(String name) {
+        return columnFamilies.get(name);
+    }
 
-	public ColumnFamilyHandle createColumnFamily(String name) throws RocksDBException {
-		ColumnFamilyDescriptor columnFamilyDescriptor = new ColumnFamilyDescriptor(name.getBytes(StandardCharsets.UTF_8));
-		ColumnFamilyHandle columnFamilyHandle = rocksDB.createColumnFamily(columnFamilyDescriptor);
-		columnFamilies.put(name, columnFamilyHandle);
-		return columnFamilyHandle;
-	}
+    public ColumnFamilyHandle createColumnFamily(String name) throws RocksDBException {
+        ColumnFamilyDescriptor columnFamilyDescriptor = new ColumnFamilyDescriptor(name.getBytes(StandardCharsets.UTF_8));
+        ColumnFamilyHandle columnFamilyHandle = rocksDB.createColumnFamily(columnFamilyDescriptor);
+        columnFamilies.put(name, columnFamilyHandle);
+        return columnFamilyHandle;
+    }
 
-	public void dropColumnFamily(String name) throws RocksDBException {
-		rocksDB.dropColumnFamily(getColumnFamily(name));
-		columnFamilies.remove(name);
-	}
+    public void dropColumnFamily(String name) throws RocksDBException {
+        rocksDB.dropColumnFamily(getColumnFamily(name));
+        columnFamilies.remove(name);
+    }
 
-	private DBOptions buildOptions() throws RocksDBException {
-		final String optionsFilePath = pathRocksDB.toString() + ".ini";
+    private DBOptions buildOptions() throws RocksDBException {
+        final String optionsFilePath = pathRocksDB.toString() + ".ini";
 
-		DBOptions options = new DBOptions();
-		if (Files.exists(Paths.get(optionsFilePath))) {
-			final List<ColumnFamilyDescriptor> ignoreDescs = new ArrayList<>();
-			OptionsUtil.loadOptionsFromFile(optionsFilePath, Env.getDefault(), options, ignoreDescs, false);
-		} else {
-			options
-					.setInfoLogLevel(InfoLogLevel.WARN_LEVEL)
-					.setMaxTotalWalSize(100L * SizeUnit.MB);
-		}
+        DBOptions options = new DBOptions();
+        if (Files.exists(Paths.get(optionsFilePath))) {
+            final List<ColumnFamilyDescriptor> ignoreDescs = new ArrayList<>();
+            OptionsUtil.loadOptionsFromFile(optionsFilePath, Env.getDefault(), options, ignoreDescs, false);
+        } else {
+            options
+                    .setInfoLogLevel(InfoLogLevel.WARN_LEVEL)
+                    .setMaxTotalWalSize(100L * SizeUnit.MB)
+                    .setUnorderedWrite(true); //https://rocksdb.org/blog/2019/08/15/unordered-write.html
+        }
 
-		return options.setCreateIfMissing(true);
-	}
+        return options.setCreateIfMissing(true);
+    }
 
-	private List<ColumnFamilyDescriptor> getColumnFamilyDescriptors() throws RocksDBException {
-		List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
+    private List<ColumnFamilyDescriptor> getColumnFamilyDescriptors() throws RocksDBException {
+        List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
 
-		try (Options options = new Options()) {
-			for (byte[] columnFamilyName : RocksDB.listColumnFamilies(options, pathRocksDB.toString())) {
-				columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName));
-			}
-		}
+        try (Options options = new Options()) {
+            for (byte[] columnFamilyName : RocksDB.listColumnFamilies(options, pathRocksDB.toString())) {
+                columnFamilyDescriptors.add(new ColumnFamilyDescriptor(columnFamilyName));
+            }
+        }
 
-		if (columnFamilyDescriptors.isEmpty()) {
-			columnFamilyDescriptors.add(new ColumnFamilyDescriptor(TypeConvert.pack(RocksDBProvider.DEFAULT_COLUMN_FAMILY)));
-		}
+        if (columnFamilyDescriptors.isEmpty()) {
+            columnFamilyDescriptors.add(new ColumnFamilyDescriptor(TypeConvert.pack(RocksDBProvider.DEFAULT_COLUMN_FAMILY)));
+        }
 
-		return columnFamilyDescriptors;
-	}
+        return columnFamilyDescriptors;
+    }
 
-	@Override
-	public void close() {
-		rocksDB.close();
-	}
+    @Override
+    public void close() {
+        rocksDB.close();
+    }
 }
