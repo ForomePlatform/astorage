@@ -10,9 +10,9 @@
     </appender>
 
     <appender name="logfile" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs${file.separator}${filename}.log</file>
+        <file>logs${file.separator}$main.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>logs${file.separator}${filename}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>logs${file.separator}$main.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
         </rollingPolicy>
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
             <maxFileSize>500MB</maxFileSize>
