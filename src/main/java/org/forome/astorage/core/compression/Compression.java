@@ -19,54 +19,83 @@
 package org.forome.astorage.core.compression;
 
 import org.forome.astorage.core.compression.exception.NotSupportCompression;
+import org.forome.astorage.core.utils.ThreadPoolService;
+import org.forome.core.struct.Interval;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class Compression {
 
-	private final Class[] types;
-	private final int sizeInterval;
+    private final Class[] types;
+    private final int sizeInterval;
 
-	public Compression(Class[] types, int sizeInterval) {
-		this.types = types;
-		this.sizeInterval = sizeInterval;
-	}
+    public Compression(Class[] types, Interval interval) {
+        this(types,interval.end - interval.start + 1);
+    }
 
-	public byte[] pack(List<Object[]> items) {
-		if (items.size() != sizeInterval) {
-			throw new IllegalArgumentException();
-		}
+    public Compression(Class[] types, int sizeInterval) {
+        this.types = types;
+        this.sizeInterval = sizeInterval;
+    }
 
-		//Последовательно упаковываем различными способами и выбираем сжатие с минимальным размером
-		TypeCompression optimalTypeCompression = null;
-		byte[] optimalPack = null;
-		for (TypeCompression type : TypeCompression.values()) {
-			byte[] pack;
-			try {
-				pack = type.compression.pack(types, items);
-			} catch (NotSupportCompression ignore) {
-				//Указанный алгоритм сжатия не поддерживает эти данные
-				continue;
-			}
-			if (optimalPack == null || optimalPack.length > pack.length) {
-				optimalTypeCompression = type;
-				optimalPack = pack;
-			}
-		}
+    public byte[] pack(List<Object[]> items) {
+        if (items.size() != sizeInterval) {
+            throw new IllegalArgumentException();
+        }
 
-		byte[] result = new byte[optimalPack.length + 1];
-		result[0] = optimalTypeCompression.value;
-		System.arraycopy(optimalPack, 0, result, 1, optimalPack.length);
-		return result;
-	}
+        //Упаковываем различными способами и выбираем сжатие с минимальным размером
+        List<CompletableFuture<byte[]>> futures = new ArrayList<>();
+        for (TypeCompression type : TypeCompression.values()) {
+            TypeCompression iType = type;
+            futures.add(
+                    CompletableFuture.supplyAsync(
+                            () -> {
+                                byte[] pack = iType.compression.pack(types, items);
 
-	public int unpackSize(byte[] bytes, int offsetBytes) {
-		TypeCompression typeCompression = TypeCompression.get(bytes[offsetBytes]);
-		return typeCompression.compression.unpackSize(types, sizeInterval, bytes, offsetBytes + 1) + 1;
-	}
+                                byte[] result = new byte[pack.length + 1];
+                                result[0] = iType.value;
+                                System.arraycopy(pack, 0, result, 1, pack.length);
+                                return result;
+                            },
+                            ThreadPoolService.threadPool
+                    ));
+        }
 
-	public Object[] unpackValues(byte[] bytes, int offsetBytes, int index) {
-		TypeCompression typeCompression = TypeCompression.get(bytes[offsetBytes]);
-		return typeCompression.compression.unpackValues(types, bytes, offsetBytes + 1, index);
-	}
+
+        byte[] optimalPack = null;
+        for (CompletableFuture<byte[]> future : futures) {
+            byte[] pack;
+            try {
+                pack = future.get();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof NotSupportCompression) {
+                    continue;
+                } else {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (optimalPack == null || optimalPack.length > pack.length) {
+                optimalPack = pack;
+            }
+        }
+
+        return optimalPack;
+    }
+
+    public int unpackSize(byte[] bytes, int offsetBytes) {
+        TypeCompression typeCompression = TypeCompression.get(bytes[offsetBytes]);
+        return typeCompression.compression.unpackSize(types, sizeInterval, bytes, offsetBytes + 1) + 1;
+    }
+
+    public Object[] unpackValues(byte[] bytes, int offsetBytes, int index) {
+        TypeCompression typeCompression = TypeCompression.get(bytes[offsetBytes]);
+        return typeCompression.compression.unpackValues(types, bytes, offsetBytes + 1, index);
+    }
 }

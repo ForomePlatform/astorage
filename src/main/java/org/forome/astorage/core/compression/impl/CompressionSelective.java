@@ -21,6 +21,7 @@ package org.forome.astorage.core.compression.impl;
 import org.forome.astorage.core.compression.AbstractCompression;
 import org.forome.astorage.core.compression.exception.NotSupportCompression;
 import org.forome.astorage.core.utils.bits.ByteBits;
+import org.forome.astorage.core.utils.bits.IntegerDynamicLengthBits;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,6 +30,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class CompressionSelective extends AbstractCompression {
+
+	private final boolean overGzip;
+
+	public CompressionSelective() {
+		this(false);
+	}
+
+	public CompressionSelective(boolean overGzip) {
+		this.overGzip = overGzip;
+	}
 
 	@Override
 	public byte[] pack(Class[] types, List<Object[]> items) throws NotSupportCompression {
@@ -59,8 +70,13 @@ public class CompressionSelective extends AbstractCompression {
 				}
 			}
 		}
+		byte[] bytes = os.toByteArray();
 
-		return os.toByteArray();
+		//Архивируем
+		if (overGzip) {
+			bytes = gzipCompress(bytes);
+		}
+		return bytes;
 	}
 
 	protected static LinkedHashMap<Integer, Object[]> getNotEmptyItems(Class[] types, List<Object[]> items) throws NotSupportCompression {
@@ -87,16 +103,29 @@ public class CompressionSelective extends AbstractCompression {
 
 	@Override
 	public int unpackSize(Class[] types, int sizeInterval, byte[] bytes, int offsetBytes) {
-		int sizeRecord = ByteBits.convertByUnsigned(bytes[offsetBytes]);
-		return 1 //1 байт на кол-во записей
-				+ (1 //1 байт на индекс записи
-				+ CompressionOrder.sizeRecord(types)//Размер записи
-		)
-				* sizeRecord;//Кол-во записей
+		if (overGzip) {
+			IntegerDynamicLengthBits.Value value = IntegerDynamicLengthBits.fromByteArray(bytes, offsetBytes);
+			return value.byteSize + value.value;
+		} else {
+			int sizeRecord = ByteBits.convertByUnsigned(bytes[offsetBytes]);
+			return 1 //1 байт на кол-во записей
+					+ (1 //1 байт на индекс записи
+					+ CompressionOrder.sizeRecord(types)//Размер записи
+			)
+					* sizeRecord;//Кол-во записей
+		}
 	}
 
 	@Override
 	public Object[] unpackValues(Class[] types, byte[] bytes, int offsetBytes, int index) {
+		if (overGzip) {
+			return _unpackValues(types, gzipDecompress(bytes, offsetBytes), 0, index);
+		} else {
+			return _unpackValues(types, bytes, offsetBytes, index);
+		}
+	}
+
+	public static Object[] _unpackValues(Class[] types, byte[] bytes, int offsetBytes, int index) {
 		int sizeRecord = ByteBits.convertByUnsigned(bytes[offsetBytes]);
 
 		for (int i = 0; i < sizeRecord; i++) {

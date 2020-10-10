@@ -20,8 +20,11 @@ package org.forome.astorage.core.compression.impl;
 
 import org.forome.astorage.core.compression.AbstractCompression;
 import org.forome.astorage.core.compression.exception.NotSupportCompression;
+import org.forome.astorage.core.packer.PacketNucleotide;
 import org.forome.astorage.core.utils.bits.ByteBits;
+import org.forome.astorage.core.utils.bits.IntegerDynamicLengthBits;
 import org.forome.astorage.core.utils.bits.ShortBits;
+import org.forome.core.struct.nucleotide.Nucleotide;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +38,16 @@ import java.util.stream.Collectors;
  * В настоящий момент поддерживается упаковка только однотипных значений, а так же размер карты не больше 255 элементов
  */
 public class CompressionOrderWithDictionary extends AbstractCompression {
+
+	private final boolean overGzip;
+
+	public CompressionOrderWithDictionary() {
+		this(false);
+	}
+
+	public CompressionOrderWithDictionary(boolean overGzip) {
+		this.overGzip = overGzip;
+	}
 
 	@Override
 	public byte[] pack(Class[] types, List<Object[]> items) throws NotSupportCompression {
@@ -85,12 +98,18 @@ public class CompressionOrderWithDictionary extends AbstractCompression {
 				os.write(ByteBits.convertFromUnsigned(dictionaryIndex));
 			}
 		}
+		byte[] bytes = os.toByteArray();
 
-		return os.toByteArray();
+		//Архивируем
+		if (overGzip) {
+			bytes = gzipCompress(bytes);
+		}
+		return bytes;
 	}
 
 	/**
 	 * Собираем словарь
+	 *
 	 * @param items
 	 * @return
 	 * @throws NotSupportCompression
@@ -106,14 +125,27 @@ public class CompressionOrderWithDictionary extends AbstractCompression {
 
 	@Override
 	public int unpackSize(Class[] types, int sizeInterval, byte[] bytes, int offsetBytes) {
-		int sizeMap = ByteBits.convertByUnsigned(bytes[offsetBytes]);
-		return 1 //Размер карты
-				+ getByteSize(types[0]) * sizeMap //Сама карта
-				+ types.length * sizeInterval; // каждое значение заниет 1 байт - ссылку на словарь
+		if (overGzip) {
+			IntegerDynamicLengthBits.Value value = IntegerDynamicLengthBits.fromByteArray(bytes, offsetBytes);
+			return value.byteSize + value.value;
+		} else {
+			int sizeMap = ByteBits.convertByUnsigned(bytes[offsetBytes]);
+			return 1 //Размер карты
+					+ getByteSize(types[0]) * sizeMap //Сама карта
+					+ types.length * sizeInterval; // каждое значение заниет 1 байт - ссылку на словарь
+		}
 	}
 
 	@Override
 	public Object[] unpackValues(Class[] types, byte[] bytes, int offsetBytes, int index) {
+		if (overGzip) {
+			return _unpackValues(types, gzipDecompress(bytes, offsetBytes), 0, index);
+		} else {
+			return _unpackValues(types, bytes, offsetBytes, index);
+		}
+	}
+
+	public static Object[] _unpackValues(Class[] types, byte[] bytes, int offsetBytes, int index) {
 		int sizeMap = ByteBits.convertByUnsigned(bytes[offsetBytes]);
 
 		int offset = offsetBytes
@@ -125,7 +157,13 @@ public class CompressionOrderWithDictionary extends AbstractCompression {
 		for (int i = 0; i < types.length; i++) {
 			Class type = types[i];
 
-			int dictionaryIndex = ByteBits.convertByUnsigned(bytes[offset]);
+			int dictionaryIndex;
+			try {
+				dictionaryIndex = ByteBits.convertByUnsigned(bytes[offset]);
+			} catch (Throwable ex) {
+				throw new RuntimeException(ex);
+			}
+
 			value[i] = unpackValue(type, bytes, offsetBytes + 1 + dictionaryIndex * getByteSize(type)).value;
 			offset += 1;
 		}
@@ -135,9 +173,12 @@ public class CompressionOrderWithDictionary extends AbstractCompression {
 	protected static int getByteSize(Class type) {
 		if (type == Short.class || type == short.class) {
 			return ShortBits.BYTE_SIZE;
+		} else if (type == Nucleotide.class) {
+			return PacketNucleotide.BYTE_SIZE;
 		} else {
 			throw new RuntimeException("Not support type: " + type);
 		}
 	}
 
 }
+

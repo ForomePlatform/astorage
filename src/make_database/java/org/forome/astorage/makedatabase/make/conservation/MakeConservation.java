@@ -23,6 +23,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.forome.astorage.core.data.Conservation;
 import org.forome.astorage.makedatabase.make.MakeDatabase;
 import org.forome.astorage.makedatabase.make.conservation.accumulation.AccumulationConservation;
+import org.forome.astorage.makedatabase.make.conservation.iterator.Item;
+import org.forome.astorage.makedatabase.make.conservation.iterator.SourceConservationIterator;
 import org.forome.astorage.makedatabase.statistics.StatisticsCompression;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Chromosome;
@@ -60,90 +62,49 @@ import java.util.zip.GZIPInputStream;
  */
 public class MakeConservation {
 
-	private final static Logger log = LoggerFactory.getLogger(MakeConservation.class);
+    private final static Logger log = LoggerFactory.getLogger(MakeConservation.class);
 
-	private final MakeDatabase makeDatabase;
+    private final MakeDatabase makeDatabase;
 
-	private final Assembly targetAssembly;
+    private final Assembly targetAssembly;
 
-	private final Assembly sourceAssembly;
-	private final Path sourceGerpPath;
+    private final Assembly sourceAssembly;
+    private final Path sourceGerpPath;
 
-	//В класс необходимо передать файл нужной сборке
-	public MakeConservation(
-			MakeDatabase makeDatabase,
-			Assembly targetAssembly,
-			Assembly sourceAssembly, Path sourceGerpPath
-	) {
-		this.makeDatabase = makeDatabase;
-		this.targetAssembly = targetAssembly;
+    //В класс необходимо передать файл нужной сборке
+    public MakeConservation(
+            MakeDatabase makeDatabase,
+            Assembly targetAssembly,
+            Assembly sourceAssembly, Path sourceGerpPath
+    ) {
+        this.makeDatabase = makeDatabase;
+        this.targetAssembly = targetAssembly;
 
-		this.sourceAssembly = sourceAssembly;
-		this.sourceGerpPath = sourceGerpPath;
-	}
+        this.sourceAssembly = sourceAssembly;
+        this.sourceGerpPath = sourceGerpPath;
+    }
 
-	public void build(OptimisticTransactionDB rocksDB, ColumnFamilyHandle columnFamilyRecord, StatisticsCompression statistics) throws IOException, RocksDBException {
-		log.debug("Write conservation...");
-		try (GZIPInputStream isGZ = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(sourceGerpPath)))) {
-			try (TarArchiveInputStream isTarGZ = new TarArchiveInputStream(isGZ)) {
-				TarArchiveEntry entry;
-				while ((entry = (TarArchiveEntry) isTarGZ.getNextEntry()) != null) {
-					Chromosome chromosome = getChromosome(entry.getName());
-					if (chromosome == null) {
-						log.debug("File entry: {} is ignored", entry.getName());
-						continue;
-					}
+    public void build(OptimisticTransactionDB rocksDB, ColumnFamilyHandle columnFamilyRecord, StatisticsCompression statistics) throws IOException, RocksDBException {
+        log.debug("Write conservation...");
 
-					BufferedReader isItem = new BufferedReader(new InputStreamReader(isTarGZ));
-					try (AccumulationConservation accumulation = new AccumulationConservation(rocksDB, columnFamilyRecord, statistics)) {
+        try (SourceConservationIterator sourceConservationIterator = new SourceConservationIterator(sourceGerpPath)) {
+            try (AccumulationConservation accumulation = new AccumulationConservation(rocksDB, columnFamilyRecord, statistics)) {
+                while (sourceConservationIterator.hasNext()) {
+                    Item item = sourceConservationIterator.next();
 
-						String line;
-						int sourcePosition = 0;
-						while ((line = isItem.readLine()) != null) {
-							sourcePosition++;
+                    Position targetPosition = makeDatabase.liftoverConnector.convertPosition(
+                            targetAssembly, sourceAssembly, item.position
+                    );
+                    if (targetPosition == null) {
+                        continue;
+                    }
 
-							Position targetPosition = makeDatabase.liftoverConnector.convertPosition(
-									targetAssembly, sourceAssembly, new Position(chromosome, sourcePosition)
-							);
-							if (targetPosition == null) {
-								continue;
-							}
-
-							String[] sLine = line.split("\\t");
-							Float gerpN = null;
-							if (!"0".equals(sLine[0])) {
-								gerpN = Float.parseFloat(sLine[0]);
-							}
-							Float gerpRS = null;
-							if (!"0".equals(sLine[1])) {
-								gerpRS = Float.parseFloat(sLine[1]);
-							}
-
-							accumulation.add(
-									chromosome,
-									targetPosition.value,
-									new Conservation(gerpRS, gerpN)
-							);
-
-							if (sourcePosition % 1_000_000 == 0) {
-								log.debug("Write chromosome: {}, source position: {}", chromosome.toString(), sourcePosition);
-							}
-						}
-					}
-				}
-			}
-		}
-		log.debug("Write conservation... complete");
-	}
-
-
-	private static Chromosome getChromosome(String entryName) {
-		Chromosome chromosome = Chromosome.of(entryName.split("(\\.)|(_)")[0]);
-		if (chromosome.isSupport()) {
-			return chromosome;
-		} else {
-			return null;
-		}
-	}
-
+                    accumulation.add(
+                            targetPosition, new Conservation(item.gerpRS, item.gerpN)
+                    );
+                }
+            }
+        }
+        log.debug("Write conservation... complete");
+    }
 }

@@ -4,13 +4,16 @@ import graphql.*;
 import graphql.annotations.AnnotationsSchemaCreator;
 import graphql.language.SourceLocation;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.GraphQLType;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.forome.astorage.core.exception.AStorageException;
 import org.forome.astorage.service.exception.GraphQLWrapperAStorageException;
 import org.forome.astorage.service.exception.ServiceExceptionBuilder;
 import org.forome.astorage.service.graphql.query.GQuery;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +86,7 @@ public class GraphQLService {
             astorageException = ServiceExceptionBuilder.buildGraphQLValidationException();
         } else if (errorType == ErrorType.DataFetchingException) {
             ExceptionWhileDataFetching exceptionWhileDataFetching = (ExceptionWhileDataFetching) graphQLError;
-            Throwable dataFetchingThrowable = exceptionWhileDataFetching.getException();
+            Throwable dataFetchingThrowable = getAStorageException(exceptionWhileDataFetching.getException());
             if (dataFetchingThrowable instanceof AStorageException) {
                 astorageException = (AStorageException) dataFetchingThrowable;
             } else {
@@ -104,5 +107,14 @@ public class GraphQLService {
             this.data = data;
             this.error = error;
         }
+    }
+
+    private static Throwable getAStorageException(Throwable throwable) {
+        for (Throwable chainThrowable: ExceptionUtils.getThrowableList(throwable)) {
+            if (chainThrowable instanceof AStorageException) {
+                return chainThrowable;
+            }
+        }
+        return throwable;
     }
 }

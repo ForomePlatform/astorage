@@ -40,7 +40,7 @@ public class BatchRecordConservation {
 		this.bytes = bytes;
 		this.offsetBytes = offsetBytes;
 
-		compression = new Compression(DATABASE_ORDER_TYPES, interval.end - interval.start);
+		compression = new Compression(DATABASE_ORDER_TYPES, interval);
 	}
 
 	public Conservation getConservation(Position position) {

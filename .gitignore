@@ -2,3 +2,6 @@
 /.gradle/
 
 publish.gradle
+
+*.json
+*.txt

@@ -24,43 +24,65 @@ import org.forome.core.struct.Interval;
 
 public class WriteBatchRecord {
 
-	public final Interval interval;
+    public final Interval interval;
 
-	private final WriteBatchRecordConservation writeBatchRecordConservation;
+    private final WriteBatchRecordConservation writeBatchRecordConservation;
+    private final WriteBatchRecordFasta writeBatchRecordFasta;
 
-	private final StatisticsCompression statistics;
+    private final StatisticsCompression statistics;
 
-	public WriteBatchRecord(Interval interval, StatisticsCompression statistics) {
-		this.interval = interval;
+    public WriteBatchRecord(Interval interval, StatisticsCompression statistics) {
+        this.interval = interval;
 
-		this.writeBatchRecordConservation = new WriteBatchRecordConservation(interval);
+        this.writeBatchRecordConservation = new WriteBatchRecordConservation(interval);
+        this.writeBatchRecordFasta = new WriteBatchRecordFasta(interval);
 
-		this.statistics = statistics;
-	}
+        this.statistics = statistics;
+    }
 
-	public WriteBatchRecord(BatchRecord batchRecord, StatisticsCompression statistics) {
-		this.interval = batchRecord.interval;
+    public WriteBatchRecord(BatchRecord batchRecord, StatisticsCompression statistics) {
+        this.interval = batchRecord.interval;
 
-		this.writeBatchRecordConservation = new WriteBatchRecordConservation(
-				batchRecord.batchRecordConservation
-		);
+        this.writeBatchRecordConservation = new WriteBatchRecordConservation(
+                batchRecord.batchRecordConservation
+        );
+        this.writeBatchRecordFasta = new WriteBatchRecordFasta(
+                batchRecord.batchRecordFasta
+        );
 
-		this.statistics = statistics;
-	}
+        this.statistics = statistics;
+    }
 
-	public WriteBatchRecordConservation getBatchRecordConservation() {
-		return writeBatchRecordConservation;
-	}
+    public WriteBatchRecordConservation getBatchRecordConservation() {
+        return writeBatchRecordConservation;
+    }
 
-	public boolean isEmpty() {
-		return writeBatchRecordConservation.isEmpty();
-	}
+    public WriteBatchRecordFasta getBatchRecordFasta() {
+        return writeBatchRecordFasta;
+    }
 
-	public byte[] build() {
-		byte[] conservationBytes = writeBatchRecordConservation.build();
+    public boolean isEmpty() {
+        return writeBatchRecordConservation.isEmpty()
+                && writeBatchRecordFasta.isEmpty();
+    }
 
-		statistics.add("conservation", conservationBytes);
+    public byte[] build() {
+        byte[] conservationBytes = writeBatchRecordConservation.build();
+        byte[] fastaBytes = writeBatchRecordFasta.build();
 
-		return conservationBytes;
-	}
+        byte[] bytes = new byte[
+                conservationBytes.length + fastaBytes.length
+                ];
+
+        int offset = 0;
+        System.arraycopy(conservationBytes, 0, bytes, offset, conservationBytes.length);
+
+        offset +=conservationBytes.length;
+        System.arraycopy(fastaBytes, 0, bytes, offset, fastaBytes.length);
+
+        statistics.add("conservation", conservationBytes);
+        statistics.add("fasta", fastaBytes);
+
+        return bytes;
+    }
 }

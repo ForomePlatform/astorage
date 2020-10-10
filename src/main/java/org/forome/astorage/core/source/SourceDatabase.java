@@ -57,7 +57,7 @@ public class SourceDatabase implements Source {
 		}
 		this.metadata = new Metadata(rocksDBDatabase.rocksDB, columnFamilyInfo);
 		if (metadata.getFormatVersion() != VERSION_FORMAT) {
-			throw new RuntimeException("Format version RocksDB is not correct: " + metadata.getFormatVersion());
+			throw new RuntimeException("Format version RocksDB does not correct: " + metadata.getFormatVersion());
 		}
 		if (metadata.getAssembly() != assembly) {
 			throw new RuntimeException("Not equals assembly: " + metadata.getAssembly());

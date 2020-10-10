@@ -21,12 +21,17 @@ package org.forome.astorage.makedatabase.make.accumulation;
 import org.forome.astorage.core.batch.BatchRecord;
 import org.forome.astorage.core.packer.PackInterval;
 import org.forome.astorage.core.source.SourceDatabase;
+import org.forome.astorage.makedatabase.main.MainMakeDatabase;
 import org.forome.astorage.makedatabase.make.batchrecord.WriteBatchRecord;
 import org.forome.astorage.makedatabase.statistics.StatisticsCompression;
 import org.forome.core.struct.Position;
 import org.rocksdb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Accumulation implements AutoCloseable {
+
+	private final static Logger log = LoggerFactory.getLogger(Accumulation.class);
 
 	protected final OptimisticTransactionDB rocksDB;
 	protected final ColumnFamilyHandle columnFamily;
