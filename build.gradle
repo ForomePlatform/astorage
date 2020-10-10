@@ -7,7 +7,7 @@ if (file('publish.gradle').exists()) {
 }
 
 group 'org.forome.astorage'
-version '1.0.0'
+version '1.0.0p1'
 
 sourceCompatibility = 1.8
 
@@ -62,6 +62,18 @@ jar {
                 it.isDirectory() ? it : zipTree(it)
             }
             configurations.make_databaseRuntime.collect {
+                it.isDirectory() ? it : zipTree(it)
+            }
+        }
+    } else if (project.hasProperty('service')) {
+        archiveName = 'astorage_service.jar'
+
+        from files(sourceSets.service.output)
+        from {
+            configurations.serviceCompile.collect {
+                it.isDirectory() ? it : zipTree(it)
+            }
+            configurations.serviceRuntime.collect {
                 it.isDirectory() ? it : zipTree(it)
             }
         }

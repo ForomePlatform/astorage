@@ -62,7 +62,11 @@ public class GGroupDataPosition {
         for (int i = 0; i < nucleotides.length; i++) {
             Position position = new Position(interval.chromosome, interval.start + i);
             Record record = source.getRecord(position);
-            nucleotides[i] = record.getNucleotide();
+            if (record == null) {
+                nucleotides[i] = Nucleotide.NONE;
+            } else {
+                nucleotides[i] = record.getNucleotide();
+            }
         }
 
         Sequence sequence = new Sequence(interval, nucleotides);
