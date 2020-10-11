@@ -80,12 +80,17 @@ public class SourceFastaIterator implements Iterator, AutoCloseable {
             readNextLine();
         }
 
-        _nextItem = new Item(
-                new Position(currentChromosome, currentCountPosition + currentLineIndex + 1),
-                Nucleotide.of(currentLine.charAt(currentLineIndex))
-        );
+        if (currentLine != null) {
+            _nextItem = new Item(
+                    new Position(currentChromosome, currentCountPosition + currentLineIndex + 1),
+                    Nucleotide.of(currentLine.charAt(currentLineIndex))
+            );
 
-        currentLineIndex++;
+            currentLineIndex++;
+        } else {
+            //Элементы закончились
+            _nextItem = null;
+        }
     }
 
     private void readNextLine() throws IOException {
