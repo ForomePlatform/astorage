@@ -53,8 +53,8 @@ public class GGroupDataPosition {
     }
 
     @GraphQLField
-    @GraphQLName("nucleotides")
-    public String getNucleotides() {
+    @GraphQLName("fasta")
+    public String getFasta() {
         AStorage aStorage = Service.getInstance().getAStorageService().aStorage;
         Source source = aStorage.getSource(assembly);
 

@@ -31,16 +31,16 @@ import org.forome.core.struct.Interval;
 import org.forome.core.struct.Position;
 
 @GraphQLName("source")
-public class GSource {
+public class GDatabase {
 
     private final Assembly assembly;
 
-    public GSource(Assembly assembly) {
+    public GDatabase(Assembly assembly) {
         this.assembly = assembly;
     }
 
     @GraphQLField
-    @GraphQLName("data_by_position")
+    @GraphQLName("by_position")
     public GDataPosition getDataByPosition(
             @GraphQLNonNull
             @GraphQLName("chromosome") GChromosome gChromosome,
@@ -54,7 +54,7 @@ public class GSource {
     }
 
     @GraphQLField
-    @GraphQLName("data_by_positions")
+    @GraphQLName("by_positions")
     public GGroupDataPosition getDataByPosition(
             @GraphQLNonNull
             @GraphQLName("chromosome") GChromosome gChromosome,

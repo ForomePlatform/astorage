@@ -67,12 +67,19 @@ public class ValidationFasta {
                     }
                 }
 
-                if (item.nucleotide != record.getNucleotide()) {
+                if (!validation(item.nucleotide, record.getNucleotide())) {
                     log.debug("Fail validation fasta: {}, expected: {}, actual: {}",
                             item.position, item.nucleotide, record.getNucleotide());
                     throw new RuntimeException("Exception validation");
                 }
             }
         }
+    }
+
+    private boolean validation(Nucleotide expected, Nucleotide actual) {
+        if (expected == actual) return true;
+        if (expected == null && actual == Nucleotide.NONE) return true;
+        if (expected == Nucleotide.NONE && actual == null) return true;
+        return false;
     }
 }
