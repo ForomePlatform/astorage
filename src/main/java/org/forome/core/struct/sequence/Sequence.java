@@ -19,6 +19,7 @@
 package org.forome.core.struct.sequence;
 
 import org.forome.core.struct.Interval;
+import org.forome.core.struct.Position;
 import org.forome.core.struct.nucleotide.Nucleotide;
 
 public class Sequence {
@@ -41,6 +42,13 @@ public class Sequence {
 			sBuilder.append(nucleotides[i].character);
 		}
 		return sBuilder.toString();
+	}
+
+	public Nucleotide getNucleotide(Position position) {
+		if (!interval.contains(position)) {
+			throw new IllegalArgumentException();
+		}
+		return nucleotides[position.value-interval.start];
 	}
 
 	public static Sequence build(Interval interval, String value) {

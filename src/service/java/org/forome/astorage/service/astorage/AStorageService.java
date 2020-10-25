@@ -42,6 +42,9 @@ public class AStorageService {
         if (config.databaseHg38 != null) {
             builder.withSource(Assembly.GRCh38, config.databaseHg38);
         }
+
+        builder.withSourcePAStorage(config.sourcePAStorage);
+
         aStorage = builder.build();
     }
 
