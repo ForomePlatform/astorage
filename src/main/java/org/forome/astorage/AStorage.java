@@ -38,29 +38,6 @@ public class AStorage {
         }
 
         this.paStorage = new PAStorage(builder.sourcePAStorage);
-
-
-        SchemaFasta schemaFasta = (SchemaFasta) paStorage.getSchema("fasta");
-//        Record record = paStorage.getSchema("fasta")
-//                .getRecord(Assembly.GRCh38, new Position(Chromosome.CHR_2, 73448090));
-
-        StringBuilder sb = new StringBuilder();
-
-        for (int i =73441275; i<= 73441286; i++) {
-            RecordFasta record = schemaFasta.getRecord(
-                    Assembly.GRCh38,
-                    new Position(Chromosome.CHR_2, i)
-            );
-            sb.append(record.nucleotide.character);
-        }
-
-
-
-
-        System.out.println("fasta: " + sb.toString());
-
-//        Record record = paStorage.getSchema("fasta")
-//                .getRecord(Assembly.GRCh38, new Position(Chromosome.CHR_2, 73441280));
     }
 
     public Source getSource(Assembly assembly) {

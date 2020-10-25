@@ -19,6 +19,7 @@
 package org.forome.astorage.pastorage;
 
 import org.forome.astorage.pastorage.schema.Schema;
+import org.forome.astorage.pastorage.schema.SchemaFasta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,12 @@ public class LoadSchemes {
                             Path schemaDatabase = source.resolve("rdbs").resolve(schemaName).toAbsolutePath();
                             if (!Files.exists(schemaDatabase)) {
                                 log.warn("Database schema is not exists(ignored): {}", schemaDatabase);
+                                return null;
+                            }
+
+                            //TODO Необходимо удалить - этот фильтр
+                            if (!schemaName.equals(SchemaFasta.SCHEMA_FASTA_NAME)) {
+                                log.warn("Database schema is ignored: {}", schemaDatabase);
                                 return null;
                             }
 

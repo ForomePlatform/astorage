@@ -47,7 +47,7 @@ public class Schema {
 
         JSONObject jSchemaFile = parseSchemaFile(schemaFile);
         if (!jSchemaFile.getAsString("name").equals(name)) {
-            throw new RuntimeException("Discrepancy schema file: " + schemaFile.toString());
+            throw new RuntimeException("Discrepancy schema: " + name + ", file: " + schemaFile.toString());
         }
         this.mBlockSize = jSchemaFile.getAsNumber("block-size").intValue();
 
