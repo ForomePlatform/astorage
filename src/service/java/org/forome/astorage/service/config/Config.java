@@ -38,6 +38,8 @@ public class Config {
 
 	public final Path databaseHg38;
 
+	public final Path sourcePAStorage;
+
 	public Config(Path configFile){
 		if (!Files.exists(configFile)) {
 			throw new RuntimeException("File: " + configFile.toString() + " not found");
@@ -71,6 +73,12 @@ public class Config {
 			}
 		} else {
 			databaseHg38 = null;
+		}
+
+
+		sourcePAStorage = Paths.get(configFileJson.getAsString("pastorage"));
+		if (!Files.exists(sourcePAStorage) || !Files.isDirectory(sourcePAStorage)) {
+			throw new RuntimeException("Source paStorage does not exists: " + sourcePAStorage);
 		}
 	}
 
