@@ -59,6 +59,9 @@ import java.util.zip.GZIPInputStream;
  * Исходные данные:
  * nohup wget http://mendel.stanford.edu/SidowLab/downloads/gerp/hg19.GERP_scores.tar.gz . &
  * nohup wget http://mendel.stanford.edu/SidowLab/downloads/gerp/hg18.GERP_scores.tar.gz &
+ *
+ * Для проверки необходимо использовать сайт
+ * https://evs.gs.washington.edu/EVS/ - поле gerpRS
  */
 public class MakeConservation {
 
