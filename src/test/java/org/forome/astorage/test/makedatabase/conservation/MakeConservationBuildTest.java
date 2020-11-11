@@ -22,6 +22,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.forome.astorage.core.batch.BatchRecord;
 import org.forome.astorage.core.batch.BatchRecordConservation;
 import org.forome.astorage.core.data.Conservation;
+import org.forome.astorage.core.liftover.LiftoverConnector;
 import org.forome.astorage.makedatabase.make.batchrecord.WriteBatchRecordConservation;
 import org.forome.core.struct.Chromosome;
 import org.forome.core.struct.Interval;
@@ -29,51 +30,52 @@ import org.forome.core.struct.Position;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class MakeConservationBuildTest {
 
-	@Test
-	public void test() {
-		for (int k = 0; k < 100; k += 23) {
+    @Test
+    public void test() throws IOException {
+        for (int k = 0; k < 100; k += 23) {
 
-			Interval interval = Interval.of(
-					Chromosome.CHR_1,
-					k * BatchRecord.DEFAULT_SIZE, (k + 1) * BatchRecord.DEFAULT_SIZE - 1
-			);
+            Interval interval = Interval.of(
+                    Chromosome.CHR_1,
+                    k * BatchRecord.DEFAULT_SIZE, (k + 1) * BatchRecord.DEFAULT_SIZE - 1
+            );
 
-			for (int t = 0; t < 10000; t++) {
+            for (int t = 0; t < 10000; t++) {
 
-				WriteBatchRecordConservation writeBatchRecordConservation = new WriteBatchRecordConservation(interval);
-				for (int i = 0; i < BatchRecord.DEFAULT_SIZE; i++) {
-					Position position = new Position(interval.chromosome, interval.start + i);
-					Conservation conservation = new Conservation(
-							(RandomUtils.nextBoolean()) ? null : RandomUtils.nextFloat(0.0f, 62.0f) - 31.0f,
-							(RandomUtils.nextBoolean()) ? null : RandomUtils.nextFloat(0.0f, 62.0f) - 31.0f
-					);
-					writeBatchRecordConservation.set(position, conservation);
-				}
+                WriteBatchRecordConservation writeBatchRecordConservation = new WriteBatchRecordConservation(interval);
+                for (int i = 0; i < BatchRecord.DEFAULT_SIZE; i++) {
+                    Position position = new Position(interval.chromosome, interval.start + i);
+                    Conservation conservation = new Conservation(
+                            (RandomUtils.nextBoolean()) ? null : RandomUtils.nextFloat(0.0f, 62.0f) - 31.0f,
+                            (RandomUtils.nextBoolean()) ? null : RandomUtils.nextFloat(0.0f, 62.0f) - 31.0f
+                    );
+                    writeBatchRecordConservation.set(position, conservation);
+                }
 
-				byte[] bytes = writeBatchRecordConservation.build();
+                byte[] bytes = writeBatchRecordConservation.build();
 
-				//restore
-				BatchRecordConservation batchRecordConservation = new BatchRecordConservation(interval, bytes, 0);
+                //restore
+                BatchRecordConservation batchRecordConservation = new BatchRecordConservation(interval, bytes, 0);
 
-				//assert
-				for (int p = interval.start; p < interval.end; p++) {
-					Position position = new Position(interval.chromosome, p);
+                //assert
+                for (int p = interval.start; p < interval.end; p++) {
+                    Position position = new Position(interval.chromosome, p);
 
-					Conservation restoreConservation = batchRecordConservation.getConservation(position);
+                    Conservation restoreConservation = batchRecordConservation.getConservation(position);
 
-					assertFloat(writeBatchRecordConservation.getConservation(position).gerpRS, restoreConservation.gerpRS);
-					assertFloat(writeBatchRecordConservation.getConservation(position).gerpN, restoreConservation.gerpN);
-				}
-			}
-		}
-	}
+                    assertFloat(writeBatchRecordConservation.getConservation(position).gerpRS, restoreConservation.gerpRS);
+                    assertFloat(writeBatchRecordConservation.getConservation(position).gerpN, restoreConservation.gerpN);
+                }
+            }
+        }
+    }
 
-	private void assertFloat(Float expected, Float actual) {
-		if (Objects.equals(expected, actual)) return;
-		Assert.assertEquals(expected, actual, 0.001d);
-	}
+    private void assertFloat(Float expected, Float actual) {
+        if (Objects.equals(expected, actual)) return;
+        Assert.assertEquals(expected, actual, 0.001d);
+    }
 }
