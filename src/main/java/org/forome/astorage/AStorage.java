@@ -51,8 +51,8 @@ public class AStorage {
         }
     }
 
-    public Schema getSchema(String name) {
-        return paStorage.getSchema(name);
+    public PAStorage getPaStorage() {
+        return paStorage;
     }
 
     public static class Builder {
