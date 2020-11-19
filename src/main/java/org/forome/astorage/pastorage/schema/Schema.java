@@ -35,12 +35,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class Schema {
+public abstract class Schema {
 
     public final String name;
-    public int mBlockSize;
 
-    protected final RocksDBDatabase rocksDBDatabase;
+	public final RocksDBDatabase rocksDBDatabase;
 
     protected Schema(String name, Path schemaFile, Path schemaDatabase) {
         this.name = name;
@@ -49,7 +48,6 @@ public class Schema {
         if (!jSchemaFile.getAsString("name").equals(name)) {
             throw new RuntimeException("Discrepancy schema: " + name + ", file: " + schemaFile.toString());
         }
-        this.mBlockSize = jSchemaFile.getAsNumber("block-size").intValue();
 
         try {
             this.rocksDBDatabase = new RocksDBDatabase(schemaDatabase);
@@ -58,29 +56,31 @@ public class Schema {
         }
     }
 
-    public Record getRecord(Assembly assembly, Position position) {
-        return null;
-    }
+    public abstract Record getRecord(Assembly assembly, Position position);
 
     protected ColumnFamilyHandle getColumnFamily(Assembly assembly) {
         if (assembly == Assembly.GRCh37) {
-            return rocksDBDatabase.getColumnFamily("hg19");
+            return getColumnFamily("hg19");
         } else if (assembly == Assembly.GRCh38) {
-            return rocksDBDatabase.getColumnFamily("hg38");
+            return getColumnFamily("hg38");
         } else {
             throw new RuntimeException();
         }
     }
 
+	public ColumnFamilyHandle getColumnFamily(String name) {
+		return rocksDBDatabase.getColumnFamily(name);
+	}
+
     public static Schema build(String name, Path schemaFile, Path schemaDatabase) {
         if (SchemaFasta.SCHEMA_FASTA_NAME.equals(name)) {
             return new SchemaFasta(schemaFile, schemaDatabase);
         } else {
-            return new Schema(name, schemaFile, schemaDatabase);
+            return new SchemaCommon(name, schemaFile, schemaDatabase);
         }
     }
 
-    private static JSONObject parseSchemaFile(Path path) {
+    protected static JSONObject parseSchemaFile(Path path) {
         try (InputStream is = Files.newInputStream(path, StandardOpenOption.READ)) {
             return (JSONObject) new JSONParser(JSONParser.DEFAULT_PERMISSIVE_MODE).parse(is);
         } catch (IOException e) {

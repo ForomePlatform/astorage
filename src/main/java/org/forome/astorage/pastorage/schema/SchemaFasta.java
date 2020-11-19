@@ -18,15 +18,9 @@
 
 package org.forome.astorage.pastorage.schema;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorInputStream;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
-import org.apache.commons.io.IOUtils;
+import net.minidev.json.JSONObject;
 import org.forome.astorage.core.exception.ExceptionBuilder;
 import org.forome.astorage.pastorage.codec.HGKey;
-import org.forome.astorage.pastorage.record.Record;
 import org.forome.astorage.pastorage.record.RecordFasta;
 import org.forome.astorage.pastorage.utils.CompressorUtils;
 import org.forome.core.struct.Assembly;
@@ -37,65 +31,51 @@ import org.forome.core.struct.sequence.Sequence;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDBException;
 
-import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class SchemaFasta extends Schema {
 
-    public static final String SCHEMA_FASTA_NAME = "fasta";
+	public static final String SCHEMA_FASTA_NAME = "fasta";
 
-    private final Map<Assembly, Cache<Position, Sequence>> cacheSequences;
+	public int mBlockSize;
 
-    protected SchemaFasta(Path schemaFile, Path schemaDatabase) {
-        super(SCHEMA_FASTA_NAME, schemaFile, schemaDatabase);
-        this.cacheSequences = new HashMap<>();
-    }
+	protected SchemaFasta(Path schemaFile, Path schemaDatabase) {
+		super(SCHEMA_FASTA_NAME, schemaFile, schemaDatabase);
 
-    @Override
-    public RecordFasta getRecord(Assembly assembly, Position position) {
-        Chromosome chromosome = position.chromosome;
-        int pos = position.value;
+		JSONObject jSchemaFile = parseSchemaFile(schemaFile);
+		this.mBlockSize = jSchemaFile.getAsNumber("block-size").intValue();
+	}
 
-        Position basePosition = new Position(
-                position.chromosome,
-                (pos - 1) - ((pos - 1) % mBlockSize)
-        );
+	@Override
+	public RecordFasta getRecord(Assembly assembly, Position position) {
+		Chromosome chromosome = position.chromosome;
+		int pos = position.value;
 
-        Cache<Position, Sequence> cacheSequence = cacheSequences.computeIfAbsent(
-                assembly, assembly1 -> CacheBuilder.newBuilder().maximumSize(100).build()
-        );
+		Position basePosition = new Position(
+				position.chromosome,
+				(pos - 1) - ((pos - 1) % mBlockSize)
+		);
 
-        Sequence sequence;
-        try {
-            sequence = cacheSequence.get(basePosition, () -> {
-                byte[] key = HGKey.encode(assembly, basePosition);
+		byte[] key = HGKey.encode(assembly, basePosition);
 
-                ColumnFamilyHandle columnFamily = getColumnFamily(assembly);
-                byte[] value;
-                try {
-                    value = rocksDBDatabase.rocksDB.get(columnFamily, key);
-                } catch (RocksDBException ex) {
-                    throw ExceptionBuilder.buildDatabaseException(ex);
-                }
+		ColumnFamilyHandle columnFamily = getColumnFamily(assembly);
+		byte[] value;
+		try {
+			value = rocksDBDatabase.rocksDB.get(columnFamily, key);
+		} catch (RocksDBException ex) {
+			throw ExceptionBuilder.buildDatabaseException(ex);
+		}
 
-                byte[] bytes = CompressorUtils.uncompress(value);
-                String sSequence = new String(bytes, StandardCharsets.UTF_8);
+		byte[] bytes = CompressorUtils.uncompress(value);
+		String sSequence = new String(bytes, StandardCharsets.UTF_8);
 
-                Interval interval = Interval.of(chromosome, basePosition.value + 1, basePosition.value + sSequence.length());
+		Interval interval = Interval.of(chromosome, basePosition.value + 1, basePosition.value + sSequence.length());
 
-                return Sequence.build(interval, sSequence);
-            });
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
-        }
+		Sequence sequence = Sequence.build(interval, sSequence);
 
-        return new RecordFasta(
-                sequence.getNucleotide(position)
-        );
-    }
+		return new RecordFasta(
+				sequence.getNucleotide(position)
+		);
+	}
 }
