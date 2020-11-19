@@ -19,6 +19,7 @@
 package org.forome.astorage.pastorage;
 
 import org.forome.astorage.pastorage.schema.Schema;
+import org.forome.astorage.pastorage.schema.SchemaCommon;
 import org.forome.astorage.pastorage.schema.SchemaFasta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,42 +33,44 @@ import java.util.stream.Collectors;
 
 public class LoadSchemes {
 
-    private final static Logger log = LoggerFactory.getLogger(LoadSchemes.class);
+	private final static Logger log = LoggerFactory.getLogger(LoadSchemes.class);
 
-    private final Map<String, Schema> schemes;
+	private final Map<String, Schema> schemes;
 
-    public LoadSchemes(Path source) throws IOException {
-        Path pathSchemes = source.resolve("schema").toAbsolutePath();
-        schemes = Files.walk(pathSchemes)
-                        .filter(path -> !path.equals(pathSchemes))
-                        .filter(Files::isDirectory)
-                        .map(path -> {
-                            String schemaName = path.getFileName().toString();
-                            Path schemaFile = path.resolve(schemaName + ".json").toAbsolutePath();
-                            if (!Files.exists(schemaFile)) {
-                                log.warn("File schema is not exists(ignored): {}", schemaFile);
-                                return null;
-                            }
+	public LoadSchemes(Path source) throws IOException {
+		Path pathSchemes = source.resolve("schema").toAbsolutePath();
+		schemes = Files.walk(pathSchemes)
+				.filter(path -> !path.equals(pathSchemes))
+				.filter(Files::isDirectory)
+				.map(path -> {
+					String schemaName = path.getFileName().toString();
+					Path schemaFile = path.resolve(schemaName + ".json").toAbsolutePath();
+					if (!Files.exists(schemaFile)) {
+						log.warn("File schema is not exists(ignored): {}", schemaFile);
+						return null;
+					}
 
-                            Path schemaDatabase = source.resolve("rdbs").resolve(schemaName).toAbsolutePath();
-                            if (!Files.exists(schemaDatabase)) {
-                                log.warn("Database schema is not exists(ignored): {}", schemaDatabase);
-                                return null;
-                            }
+					Path schemaDatabase = source.resolve("rdbs").resolve(schemaName).toAbsolutePath();
+					if (!Files.exists(schemaDatabase)) {
+						log.warn("Database schema is not exists(ignored): {}", schemaDatabase);
+						return null;
+					}
 
-                            //TODO Необходимо удалить - этот фильтр
-                            if (!schemaName.equals(SchemaFasta.SCHEMA_FASTA_NAME)) {
-                                log.warn("Database schema is ignored: {}", schemaDatabase);
-                                return null;
-                            }
+					//TODO Необходимо удалить - этот фильтр
+					if (!schemaName.equals(SchemaFasta.SCHEMA_FASTA_NAME)
+							&& !schemaName.equals(SchemaCommon.SCHEMA_DBSNP_NAME)
+					) {
+						log.warn("Database schema is ignored: {}", schemaDatabase);
+						return null;
+					}
 
-                            return Schema.build(schemaName, schemaFile, schemaDatabase);
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toMap (schema -> schema.name, schema -> schema));
-    }
+					return Schema.build(schemaName, schemaFile, schemaDatabase);
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.toMap(schema -> schema.name, schema -> schema));
+	}
 
-    public Map<String, Schema> getSchemes() {
-        return schemes;
-    }
+	public Map<String, Schema> getSchemes() {
+		return schemes;
+	}
 }

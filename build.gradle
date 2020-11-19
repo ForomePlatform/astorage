@@ -7,7 +7,7 @@ if (file('publish.gradle').exists()) {
 }
 
 group 'org.forome.astorage'
-version '1.0.0p6'
+version '1.0.0p7'
 
 sourceCompatibility = 1.8
 
@@ -95,7 +95,7 @@ dependencies {
 
     compile 'com.github.samtools:htsjdk:2.23.0'
 
-    compile 'com.google.guava:guava:23.0'
+    compile 'com.google.guava:guava:27.0.1-jre'
     compile 'commons-cli:commons-cli:1.4'
     compile 'commons-io:commons-io:2.8.0'
     compile 'com.infomaximum:rdao:1.9.1'
