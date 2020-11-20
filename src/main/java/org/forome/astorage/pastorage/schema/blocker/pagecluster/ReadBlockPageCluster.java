@@ -33,20 +33,39 @@ public class ReadBlockPageCluster {
 
 	public ReadBlockPageCluster(
 			SchemaCommon schemaCommon,
+			int pos_diap1, int pos_diap2
+	) {
+		this(
+				schemaCommon,
+				pos_diap1, pos_diap2,
+				null, null
+		);
+	}
+
+	public ReadBlockPageCluster(
+			SchemaCommon schemaCommon,
 			int pos_diap1, int pos_diap2,
 			List<Position> pos_seq,
 			List<Object> seq_data
 	) {
 		this.pos_seq = pos_seq;
-		this.aDataDecodeEnv = new ADataDecodeEnv(
-				schemaCommon,
-				pos_diap1, pos_diap2,
-				pos_seq,
-				(String) seq_data.get(1), (String) seq_data.get(2)
-		);
+		if (pos_seq != null) {
+			this.aDataDecodeEnv = new ADataDecodeEnv(
+					schemaCommon,
+					pos_diap1, pos_diap2,
+					pos_seq,
+					(String) seq_data.get(1), (String) seq_data.get(2)
+			);
+		} else {
+			this.aDataDecodeEnv = null;
+		}
 	}
 
 	public JSONArray getRecord(Position position) {
+		if (aDataDecodeEnv == null) {
+			return null;
+		}
+
 		int idx = -1;
 		for (int i = 0; i < pos_seq.size(); i++) {
 			if (pos_seq.get(i).equals(position)) {

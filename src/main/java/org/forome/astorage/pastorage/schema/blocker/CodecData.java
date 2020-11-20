@@ -20,10 +20,7 @@ package org.forome.astorage.pastorage.schema.blocker;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.forome.astorage.pastorage.schema.blocker.codec.Codec;
-import org.forome.astorage.pastorage.schema.blocker.codec.CodecDict;
-import org.forome.astorage.pastorage.schema.blocker.codec.CodecList;
-import org.forome.astorage.pastorage.schema.blocker.codec.CodecStr;
+import org.forome.astorage.pastorage.schema.blocker.codec.*;
 
 public class CodecData {
 
@@ -48,8 +45,10 @@ public class CodecData {
 				return new CodecDict(this, schema_instr);
 			case "str":
 				return new CodecStr(this, schema_instr);
+			case "num":
+				return new CodecNum(this, schema_instr);
 			default:
-				throw new RuntimeException();
+				throw new RuntimeException(type);
 		}
 
 	}
