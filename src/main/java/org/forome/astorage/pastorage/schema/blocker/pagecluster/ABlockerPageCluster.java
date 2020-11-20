@@ -74,7 +74,10 @@ public class ABlockerPageCluster extends ABlockerIO {
 					seq_data
 			);
 		} else {
-			throw new RuntimeException("Not implemented");
+			return new ReadBlockPageCluster(
+					schemaCommon,
+					result.pos1, result.pos2
+			);
 		}
 
 //		if key_base is not None:

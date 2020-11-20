@@ -59,6 +59,7 @@ public class LoadSchemes {
 					//TODO Необходимо удалить - этот фильтр
 					if (!schemaName.equals(SchemaFasta.SCHEMA_FASTA_NAME)
 							&& !schemaName.equals(SchemaCommon.SCHEMA_DBSNP_NAME)
+							&& !schemaName.equals(SchemaCommon.SCHEMA_DBNSFP_NAME)
 					) {
 						log.warn("Database schema is ignored: {}", schemaDatabase);
 						return null;

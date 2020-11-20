@@ -72,7 +72,11 @@ public class ReadBlockPosPager {
 					(idx > 0) ? ret + 1 : startBlockPosition.value
 			);
 		}
-		throw new RuntimeException("Not implemented");
+		return new Result(
+				null,
+				(mArray.length > 0) ? mArray[mArray.length - 1] : 0 + startBlockPosition.value,
+				(mLen > 0) ? endBlockPosition.value : startBlockPosition.value
+		);
 	}
 
 	private static int bisectLeft(Integer[] mArray, int value) {

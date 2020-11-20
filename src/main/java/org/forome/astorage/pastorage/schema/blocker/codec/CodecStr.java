@@ -18,12 +18,15 @@
 
 package org.forome.astorage.pastorage.schema.blocker.codec;
 
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.forome.astorage.pastorage.schema.blocker.ADataDecodeEnv;
 import org.forome.astorage.pastorage.schema.blocker.CodecData;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class CodecStr extends Codec {
@@ -40,6 +43,9 @@ public class CodecStr extends Codec {
 	private int mPreShift;
 	private Map<Integer, String> mPreDecode;
 
+	private List<String> mDictList;
+	private Map<String, Integer> mDict;
+
 	private Boolean mRepeatable;
 
 	public CodecStr(CodecData codecData, JSONObject schema_instr) {
@@ -47,7 +53,13 @@ public class CodecStr extends Codec {
 
 		String opt = schema_instr.getAsString("opt");
 		if ("dict".equals(opt)) {
-			throw new RuntimeException();
+			mDictList = ((JSONArray) schema_instr.get("dictlist")).stream()
+					.map(o -> (String) o).collect(Collectors.toList());
+
+			mDict = new HashMap<>();
+			for (int i = 0; i < mDictList.size(); i++) {
+				mDict.put(mDictList.get(i), i);
+			}
 		} else {
 			if ("repeat".equals(opt)) {
 				mRepeatable = true;
@@ -56,7 +68,7 @@ public class CodecStr extends Codec {
 				mPreShift = mPreDict.size();
 
 				mPreDecode = new HashMap<>();
-				for (Map.Entry<String, String> entry: mPreDict.entrySet()) {
+				for (Map.Entry<String, String> entry : mPreDict.entrySet()) {
 					mPreDecode.put(Integer.parseInt(entry.getValue()), entry.getKey());
 				}
 			} else {
@@ -72,15 +84,18 @@ public class CodecStr extends Codec {
 		if (int_obj == null) {
 			return null;
 		}
-		int v_idx = (int)int_obj;
+		int v_idx = (int) int_obj;
 
 		if (mPreShift > 0) {
-			if ( v_idx < mPreShift) {
+			if (v_idx < mPreShift) {
 				return mPreDecode.get(v_idx);
 			}
 			v_idx -= mPreShift;
 		}
 
+		if (mDict != null) {
+			return mDictList.get(v_idx);
+		}
 		return dataDecodeEnv.getStr(v_idx);
 	}
 }

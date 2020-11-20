@@ -31,6 +31,7 @@ import java.nio.file.Path;
 public class SchemaCommon extends Schema {
 
 	public static final String SCHEMA_DBSNP_NAME = "dbSNP";
+	public static final String SCHEMA_DBNSFP_NAME = "dbNSFP";
 
 	public final ABlockerIO blocker;
 	public final CodecList codecList;
