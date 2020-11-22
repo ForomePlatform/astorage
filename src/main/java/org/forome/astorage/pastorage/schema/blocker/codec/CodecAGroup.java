@@ -24,55 +24,63 @@ import org.forome.astorage.pastorage.schema.blocker.ADataDecodeEnv;
 import org.forome.astorage.pastorage.schema.blocker.CodecData;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
-public class CodecDict extends Codec {
+public class CodecAGroup extends Codec {
 
+	private final List<String> mGroup;
+	private String mGroupName;
 	private final List<Codec> mItemCodecs;
 
-	public CodecDict(CodecData codecData, JSONObject schema_instr) {
+	public CodecAGroup(CodecData codecData, JSONObject schema_instr) {
 		super(codecData, schema_instr);
+
+		this.mGroup = ((JSONArray) schema_instr.get("group")).stream().map(o -> (String) o).collect(Collectors.toList());
+
+		this.mGroupName = schema_instr.getAsString("group-name");
 
 		this.mItemCodecs = new ArrayList<>();
 		for (Object o : (JSONArray) schema_instr.get("items")) {
-			mItemCodecs.add(codecData.create((JSONObject) o));
+			this.mItemCodecs.add(codecData.create((JSONObject) o));
 		}
+
 	}
 
 	@Override
-	public Object decode(Object int_obj, ADataDecodeEnv dataDecodeEnv) {
-		if (int_obj == null) {
-			return null;
-		}
+	public boolean isAggregate() {
+		return true;
+	}
 
-		JSONArray jIntObj = (JSONArray) int_obj;
-		assert (jIntObj.size() <= mItemCodecs.size());
-
+	@Override
+	public Object decode(Object group_obj, ADataDecodeEnv dataDecodeEnv) {
 		JSONObject ret = new JSONObject();
-		for (int idx = 0; idx < mItemCodecs.size(); idx++) {
-			Codec it = mItemCodecs.get(idx);
+		for (Object oint_obj : ((JSONArray) group_obj)) {
+			JSONArray int_obj = (JSONArray) oint_obj;
 
-			Object it_obj = null;
-			if (idx < jIntObj.size()) {
-				it_obj = jIntObj.get(idx);
-			}
+			String name = mGroup.get((Integer) int_obj.get(0));
+			JSONObject grp_obj = new JSONObject();
 
-			if (it.isAggregate()) {
-				if (int_obj != null) {
-					ret.merge(it.decode(it_obj, dataDecodeEnv));
+			for (int idx = 0; idx < mItemCodecs.size(); idx++) {
+				Codec it = mItemCodecs.get(idx);
+
+				Number it_obj = null;
+				if (idx + 1 < int_obj.size()) {
+					it_obj = (Number) int_obj.get(idx + 1);
 				}
-			} else {
-				if (int_obj != null) {
-					ret.put(it.getName(), it.decode(it_obj, dataDecodeEnv));
+
+				if (it.isAggregate()) {
+					throw new RuntimeException("Not implemented");
 				} else {
-					ret.put(it.getName(), null);
+					if (it_obj != null) {
+						grp_obj.put(it.getName(), it.decode(it_obj, dataDecodeEnv));
+					} else {
+						grp_obj.put(it.getName(), null);
+					}
 				}
 			}
+			ret.put(name, grp_obj);
 		}
 		return ret;
 	}
-
-
 }

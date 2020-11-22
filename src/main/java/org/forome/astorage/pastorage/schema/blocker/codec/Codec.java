@@ -32,6 +32,10 @@ public abstract class Codec {
 		this.name = schema_instr.getAsString("name");
 	}
 
+	public boolean isAggregate(){
+		return false;
+	}
+
 	public abstract Object decode(Object int_obj, ADataDecodeEnv dataDecodeEnv);
 
 	protected String getName() {

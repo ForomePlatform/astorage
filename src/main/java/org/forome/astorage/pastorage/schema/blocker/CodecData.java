@@ -47,6 +47,8 @@ public class CodecData {
 				return new CodecStr(this, schema_instr);
 			case "num":
 				return new CodecNum(this, schema_instr);
+			case "attr-group":
+				return new CodecAGroup(this, schema_instr);
 			default:
 				throw new RuntimeException(type);
 		}
