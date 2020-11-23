@@ -18,8 +18,6 @@
 
 package org.forome.astorage.pastorage.schema.blocker;
 
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import net.minidev.json.parser.ParseException;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
@@ -53,7 +51,11 @@ public class ADataDecodeEnv {
 		this.pos_seq = pos_seq;
 
 		mObjSeq = data_seq1.split("\0");
-		mStrSeq = data_seq2.split("\0");
+		if (data_seq2 != null) {
+			mStrSeq = data_seq2.split("\0");
+		} else {
+			mStrSeq = null;
+		}
 	}
 
 	public Object get(int idx) {
@@ -70,6 +72,10 @@ public class ADataDecodeEnv {
 		}
 
 		return schemaCommon.codecList.decode(int_obj, this);
+	}
+
+	public int getLength() {
+		return mObjSeq.length;
 	}
 
 	public Object getStr(int v_idx) {
