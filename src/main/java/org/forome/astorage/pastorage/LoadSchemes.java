@@ -61,7 +61,7 @@ public class LoadSchemes {
 							&& !schemaName.equals(SchemaCommon.SCHEMA_DBSNP_NAME)
 							&& !schemaName.equals(SchemaCommon.SCHEMA_DBNSFP_NAME)
 							&& !schemaName.equals(SchemaCommon.SCHEMA_GNOMAD_NAME)
-//							&& !schemaName.equals(SchemaCommon.SCHEMA_GERP_NAME)
+							&& !schemaName.equals(SchemaCommon.SCHEMA_GERP_NAME)
 					) {
 						log.warn("Database schema is ignored: {}", schemaDatabase);
 						return null;

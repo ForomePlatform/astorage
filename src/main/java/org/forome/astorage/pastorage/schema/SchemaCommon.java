@@ -22,7 +22,7 @@ import net.minidev.json.JSONObject;
 import org.forome.astorage.pastorage.record.Record;
 import org.forome.astorage.pastorage.schema.blocker.ABlockerIO;
 import org.forome.astorage.pastorage.schema.blocker.CodecData;
-import org.forome.astorage.pastorage.schema.blocker.codec.CodecList;
+import org.forome.astorage.pastorage.schema.blocker.codec.Codec;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Position;
 
@@ -36,7 +36,7 @@ public class SchemaCommon extends Schema {
 	public static final String SCHEMA_GERP_NAME = "Gerp";
 
 	public final ABlockerIO blocker;
-	public final CodecList codecList;
+	public final Codec codecList;
 
 	protected SchemaCommon(String name, Path schemaFile, Path schemaDatabase) {
 		super(name, schemaFile, schemaDatabase);
@@ -48,7 +48,7 @@ public class SchemaCommon extends Schema {
 		CodecData codecData = new CodecData(
 				(JSONObject) jSchemaFile.get("top")
 		);
-		codecList = (CodecList) codecData.create(
+		codecList = codecData.create(
 				(JSONObject) jSchemaFile.get("top")
 		);
 	}

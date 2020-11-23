@@ -18,9 +18,7 @@
 
 package org.forome.astorage.pastorage.schema.blocker.pagecluster;
 
-import net.minidev.json.JSONObject;
 import org.forome.astorage.core.exception.ExceptionBuilder;
-import org.forome.astorage.core.utils.RandomUtils;
 import org.forome.astorage.pastorage.codec.HGKey;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
 import org.forome.astorage.pastorage.schema.blocker.ABlockerIO;
@@ -36,7 +34,7 @@ public class ABlockerPageCluster extends ABlockerIO {
 
 	private final ABlockerIOPosPager mPagerIO;
 
-	public ABlockerPageCluster(SchemaCommon schemaCommon, JSONObject jSchemaIO) {
+	public ABlockerPageCluster(SchemaCommon schemaCommon) {
 		super(schemaCommon);
 		this.mPagerIO = new ABlockerIOPosPager(this);
 	}
@@ -51,8 +49,6 @@ public class ABlockerPageCluster extends ABlockerIO {
 		} catch (RocksDBException ex) {
 			throw ExceptionBuilder.buildDatabaseException(ex);
 		}
-
-//		schemaCommon.getRecord()
 		return value;
 	}
 

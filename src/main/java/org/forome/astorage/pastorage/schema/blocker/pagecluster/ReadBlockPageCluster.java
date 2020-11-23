@@ -19,14 +19,14 @@
 package org.forome.astorage.pastorage.schema.blocker.pagecluster;
 
 import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
 import org.forome.astorage.pastorage.schema.blocker.ADataDecodeEnv;
+import org.forome.astorage.pastorage.schema.blocker.ReadBlock;
 import org.forome.core.struct.Position;
 
 import java.util.List;
 
-public class ReadBlockPageCluster {
+public class ReadBlockPageCluster implements ReadBlock {
 
 	private final List<Position> pos_seq;
 	private final ADataDecodeEnv aDataDecodeEnv;
@@ -61,6 +61,7 @@ public class ReadBlockPageCluster {
 		}
 	}
 
+	@Override
 	public JSONArray getRecord(Position position) {
 		if (aDataDecodeEnv == null) {
 			return null;

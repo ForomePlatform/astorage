@@ -22,9 +22,9 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.forome.astorage.pastorage.codec.HGKey;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
-import org.forome.astorage.pastorage.schema.blocker.pagecluster.ABlockerPageCluster;
 import org.forome.astorage.pastorage.schema.blocker.fields.BytesFieldsSupport;
-import org.forome.astorage.pastorage.schema.blocker.pagecluster.ReadBlockPageCluster;
+import org.forome.astorage.pastorage.schema.blocker.pagecluster.ABlockerPageCluster;
+import org.forome.astorage.pastorage.schema.blocker.segment.ABlockerIOSegment;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Position;
 
@@ -40,23 +40,22 @@ public abstract class ABlockerIO {
 	}
 
 	public JSONArray getRecord(Assembly assembly, Position position) {
-		ReadBlockPageCluster res = openReadBlock(assembly, position);
+		ReadBlock res = openReadBlock(assembly, position);
 		return res.getRecord(position);
 	}
 
-	public abstract ReadBlockPageCluster openReadBlock(Assembly assembly, Position position);
-
-	public abstract byte[] getData(byte[] key);
-
+	public abstract ReadBlock openReadBlock(Assembly assembly, Position position);
 
 	public static byte[] getXKey(Assembly assembly, Position position) {
 		return HGKey.encode(assembly, position);
 	}
 
 	public static ABlockerIO build(SchemaCommon schemaCommon, JSONObject jSchemaIO) {
-		String blockType = ((JSONObject) jSchemaIO.get("pager")).getAsString("block-type");
+		String blockType = jSchemaIO.getAsString("block-type");
 		if ("page-cluster".equals(blockType)) {
-			return new ABlockerPageCluster(schemaCommon, jSchemaIO);
+			return new ABlockerPageCluster(schemaCommon);
+		} else if ("segment".equals(blockType)) {
+			return new ABlockerIOSegment(schemaCommon, jSchemaIO);
 		} else {
 			throw new RuntimeException("Not support blockType: " + blockType);
 		}
