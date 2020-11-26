@@ -18,26 +18,43 @@
 
 package org.forome.astorage.pastorage.schema.blocker.segment;
 
+import com.google.common.collect.Lists;
 import net.minidev.json.JSONObject;
 import org.forome.astorage.core.exception.ExceptionBuilder;
 import org.forome.astorage.pastorage.codec.HGKey;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
 import org.forome.astorage.pastorage.schema.blocker.ABlockerIO;
 import org.forome.astorage.pastorage.schema.blocker.ReadBlock;
+import org.forome.astorage.pastorage.schema.blocker.fields.BytesFieldsSupport;
+import org.forome.astorage.pastorage.schema.blocker.fields.codec.BZ2Support;
 import org.forome.astorage.pastorage.utils.CompressorUtils;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Position;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.RocksDBException;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 public class ABlockerIOSegment extends ABlockerIO {
 
 	private final int mPosFrame;
+
+	private final BytesFieldsSupport mBytesSupp;
 
 	public ABlockerIOSegment(SchemaCommon schemaCommon, JSONObject jSchemaIO) {
 		super(schemaCommon);
 
 		mPosFrame = jSchemaIO.getAsNumber("pos-frame").intValue();
+
+		if (schemaCommon.name.equals(SchemaCommon.SCHEMA_SPLICEAI_NAME)) {
+			mBytesSupp = new BytesFieldsSupport(
+					new BZ2Support(),
+					new BZ2Support()
+			);
+		} else {
+			mBytesSupp = null;
+		}
 	}
 
 	@Override
@@ -53,13 +70,17 @@ public class ABlockerIOSegment extends ABlockerIO {
 	}
 
 
-	public byte[] getBlock(Assembly assembly, Position mBasePos) {
+	public List<Object> getBlock(Assembly assembly, Position mBasePos) {
 		byte[] xdata = getData(assembly, mBasePos);
 		if (xdata == null) {
 			return null;
 		}
-		byte[] bytes = CompressorUtils.uncompress(xdata);
-		return bytes;
+		if (mBytesSupp!=null) {
+			return mBytesSupp.unpack(xdata);
+		} else {
+			byte[] bytes = CompressorUtils.uncompress(xdata);
+			return Lists.newArrayList(new String(bytes, StandardCharsets.UTF_8));
+		}
 	}
 
 	private byte[] getData(Assembly assembly, Position mBasePos) {
