@@ -23,6 +23,8 @@ import net.minidev.json.JSONObject;
 import org.forome.astorage.pastorage.codec.HGKey;
 import org.forome.astorage.pastorage.schema.SchemaCommon;
 import org.forome.astorage.pastorage.schema.blocker.fields.BytesFieldsSupport;
+import org.forome.astorage.pastorage.schema.blocker.fields.codec.BZ2Support;
+import org.forome.astorage.pastorage.schema.blocker.fields.codec.PosSeqSupport;
 import org.forome.astorage.pastorage.schema.blocker.pagecluster.ABlockerPageCluster;
 import org.forome.astorage.pastorage.schema.blocker.segment.ABlockerIOSegment;
 import org.forome.core.struct.Assembly;
@@ -36,7 +38,11 @@ public abstract class ABlockerIO {
 	public ABlockerIO(SchemaCommon schemaCommon) {
 		this.schemaCommon = schemaCommon;
 
-		this.bytesFieldsSupport = new BytesFieldsSupport();
+		this.bytesFieldsSupport = new BytesFieldsSupport(
+				new PosSeqSupport(),
+				new BZ2Support(),
+				new BZ2Support()
+		);
 	}
 
 	public JSONArray getRecord(Assembly assembly, Position position) {

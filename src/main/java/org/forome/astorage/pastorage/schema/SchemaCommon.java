@@ -34,6 +34,7 @@ public class SchemaCommon extends Schema {
 	public static final String SCHEMA_DBNSFP_NAME = "dbNSFP";
 	public static final String SCHEMA_GNOMAD_NAME = "gnomAD";
 	public static final String SCHEMA_GERP_NAME = "Gerp";
+	public static final String SCHEMA_SPLICEAI_NAME = "SpliceAI";
 
 	public final ABlockerIO blocker;
 	public final Codec codecList;

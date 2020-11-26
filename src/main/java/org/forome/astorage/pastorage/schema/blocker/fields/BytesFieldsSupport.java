@@ -18,10 +18,9 @@
 
 package org.forome.astorage.pastorage.schema.blocker.fields;
 
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
-import org.forome.astorage.pastorage.schema.blocker.fields.codec.BZ2Support;
 import org.forome.astorage.pastorage.schema.blocker.fields.codec.Codec;
-import org.forome.astorage.pastorage.schema.blocker.fields.codec.PosSeqSupport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +29,8 @@ public class BytesFieldsSupport {
 
 	private final List<Codec> mConvSeq;
 
-	public BytesFieldsSupport() {
-		this.mConvSeq = new ArrayList<>();
-		this.mConvSeq.add(new PosSeqSupport());
-		this.mConvSeq.add(new BZ2Support());
-		this.mConvSeq.add(new BZ2Support());
+	public BytesFieldsSupport(Codec... codecs) {
+		this.mConvSeq = Lists.newArrayList(codecs);
 	}
 
 	public List<Object> unpack(byte[] xdata) {

@@ -24,7 +24,7 @@ import org.forome.astorage.pastorage.schema.blocker.ReadBlock;
 import org.forome.core.struct.Assembly;
 import org.forome.core.struct.Position;
 
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class ReadBlockSegment implements ReadBlock {
 
@@ -40,14 +40,16 @@ public class ReadBlockSegment implements ReadBlock {
 		this.position = position;
 
 		mBasePos = mBlocker.getBasePos(position);
-		byte[] data_seq = mBlocker.getBlock(assembly, mBasePos);
+		List<Object> data_seq = mBlocker.getBlock(assembly, mBasePos);
 
 		if (data_seq != null) {
+			String data_seq1 = (String) data_seq.get(0);
+			String data_seq2 = (data_seq.size() > 1) ? (String) data_seq.get(1) : null;
 			mDataSeq = new ADataDecodeEnv(
 					mBlocker.schemaCommon,
 					0, 0,
 					null,
-					new String(data_seq, StandardCharsets.UTF_8), null
+					data_seq1, data_seq2
 			);
 		} else {
 			mDataSeq = null;
