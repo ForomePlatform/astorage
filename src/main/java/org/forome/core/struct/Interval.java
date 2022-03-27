@@ -70,6 +70,13 @@ public class Interval {
 		return Objects.hash(chromosome, start, end);
 	}
 
+	@Override
+	public String toString ()
+	{
+		return String.format ("%s:%d-%d",
+			chromosome.toString (), start, end);
+	}
+
 	public static Interval of(Position position) {
 		return of(position.chromosome, position.value);
 	}

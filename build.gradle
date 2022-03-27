@@ -7,7 +7,7 @@ if (file('publish.gradle').exists()) {
 }
 
 group 'org.forome.astorage'
-version '1.0.0p11'
+version '1.0.0p12'
 
 sourceCompatibility = 1.8
 
