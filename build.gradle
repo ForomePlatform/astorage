@@ -9,6 +9,9 @@ if (file('publish.gradle').exists()) {
 group 'org.forome.astorage'
 version '1.0.0p13'
 
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
 sourceCompatibility = 1.8
 
 repositories {
