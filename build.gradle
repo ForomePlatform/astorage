@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'maven'
+    id 'maven-publish'
 }
 if (file('publish.gradle').exists()) {
     apply from: 'publish.gradle'
@@ -12,9 +13,22 @@ version '1.0.0p13'
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org.forome.astorage'
+            artifactId = 'core'
+            version = "${this.version}"
+
+            from components.java
+        }
+    }
+}
+
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -91,6 +105,7 @@ jar {
             }
         }
     }
+    publishToMavenLocal
 }
 
 dependencies {
@@ -109,7 +124,7 @@ dependencies {
 
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'ch.qos.logback:logback-core:1.2.2'
-    compile'ch.qos.logback:logback-classic:1.2.3'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
 
     compile 'net.minidev:json-smart:2.3'
     compile 'org.apache.commons:commons-compress:1.20'
