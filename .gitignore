@@ -1,5 +1,7 @@
 /.idea/
 /.gradle/
+*.gpg
+gradle.properties
 
 publish.gradle
 
