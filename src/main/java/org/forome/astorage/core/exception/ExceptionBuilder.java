@@ -18,7 +18,7 @@
 
 package org.forome.astorage.core.exception;
 
-import com.infomaximum.database.exception.DatabaseException;
+import org.forome.database.exception.DatabaseException;
 import org.rocksdb.RocksDBException;
 
 public class ExceptionBuilder {
