@@ -1,6 +1,6 @@
 package org.forome.astorage;
 
-import com.infomaximum.database.exception.DatabaseException;
+import org.forome.database.exception.DatabaseException;
 import org.forome.astorage.core.source.Source;
 import org.forome.astorage.core.source.SourceDatabase;
 import org.forome.astorage.pastorage.PAStorage;

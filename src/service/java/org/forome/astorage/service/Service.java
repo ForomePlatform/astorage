@@ -1,6 +1,6 @@
 package org.forome.astorage.service;
 
-import com.infomaximum.database.exception.DatabaseException;
+import org.forome.database.exception.DatabaseException;
 import org.forome.astorage.service.astorage.AStorageService;
 import org.forome.astorage.service.config.Config;
 import org.forome.astorage.service.graphql.GraphQLService;

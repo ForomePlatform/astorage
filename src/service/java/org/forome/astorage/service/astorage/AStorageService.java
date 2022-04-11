@@ -18,7 +18,7 @@
 
 package org.forome.astorage.service.astorage;
 
-import com.infomaximum.database.exception.DatabaseException;
+import org.forome.database.exception.DatabaseException;
 import org.forome.astorage.AStorage;
 import org.forome.astorage.service.Service;
 import org.forome.astorage.service.config.Config;

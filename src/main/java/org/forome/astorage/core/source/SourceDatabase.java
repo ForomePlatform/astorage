@@ -18,7 +18,7 @@
 
 package org.forome.astorage.core.source;
 
-import com.infomaximum.database.exception.DatabaseException;
+import org.forome.database.exception.DatabaseException;
 import org.forome.astorage.core.Metadata;
 import org.forome.astorage.core.batch.BatchRecord;
 import org.forome.astorage.core.exception.ExceptionBuilder;
